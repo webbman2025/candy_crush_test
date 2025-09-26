@@ -39,6 +39,7 @@ interface GameProps {
   setAudioOn: (audioOn: boolean) => void;
   setBestScore: (bestScore: number) => void;
   onBackToMenu: () => void;
+  onCriticalTimeChange?: (isCritical: boolean) => void;
 }
 
 const Game: React.FC<GameProps> = ({
@@ -46,9 +47,9 @@ const Game: React.FC<GameProps> = ({
   boardHeight = 12,
   timeLimit = 60,
   timeBonusPerMatch = 1,
-  // gamePointBaseMinimumScore = 20,
-  // gamePointBase = 25,
-  // gamePointHighest = 50,
+  gamePointBaseMinimumScore = 20,
+  gamePointBase = 25,
+  gamePointHighest = 50,
   bestScore = 0,
   items = [],
   pointsPerItem = 10,
@@ -59,6 +60,7 @@ const Game: React.FC<GameProps> = ({
   setAudioOn,
   setBestScore,
   onBackToMenu,
+  onCriticalTimeChange,
 }) => {
   const lastResumeTimeRef = useRef<number>(Date.now());
   const accumulatedTimeRef = useRef<number>(0);
@@ -149,11 +151,12 @@ const Game: React.FC<GameProps> = ({
         }));
 
         const timePercentage = (newTimeLeft / (timeLimit * 1000)) * 100;
-        setIsCriticalTime(
+        const newIsCriticalTime =
           timePercentage <= gameConfig.time.barThresholds.red &&
-            timePercentage > 0 &&
-            !gameState.isGameOver
-        );
+          timePercentage > 0 &&
+          !gameState.isGameOver;
+
+        setIsCriticalTime(newIsCriticalTime);
       }, 10);
     }
 
@@ -161,6 +164,11 @@ const Game: React.FC<GameProps> = ({
       if (timer) clearInterval(timer);
     };
   }, [gameState.isGameOver, gameState.isPaused, timeLimit]);
+
+  // Handle critical time change callback in useEffect to avoid setState during render
+  useEffect(() => {
+    onCriticalTimeChange?.(isCriticalTime);
+  }, [isCriticalTime, onCriticalTimeChange]);
 
   useEffect(() => {
     if (gameState.isGameOver) {
@@ -284,6 +292,7 @@ const Game: React.FC<GameProps> = ({
     setComboPopup(null);
     setComboPopupFading(false);
     setIsCriticalTime(false); // Reset critical time state
+    onCriticalTimeChange?.(false); // Notify parent that critical time is over
     setGameState({
       score: 0,
       timeLeft: timeLimit * 1000,
@@ -326,15 +335,15 @@ const Game: React.FC<GameProps> = ({
   };
 
   // Calculate game points based on score
-  // const calculateGamePoints = (score: number): number => {
-  //   if (score > bestScore) {
-  //     return gamePointHighest; // 50 points for beating best score
-  //   } else if (score >= gamePointBaseMinimumScore) {
-  //     return gamePointBase; // 25 points for reaching minimum score
-  //   } else {
-  //     return 0; // No points
-  //   }
-  // };
+  const calculateGamePoints = (score: number): number => {
+    if (score > bestScore) {
+      return gamePointHighest; // 50 points for beating best score
+    } else if (score >= gamePointBaseMinimumScore) {
+      return gamePointBase; // 25 points for reaching minimum score
+    } else {
+      return 0; // No points
+    }
+  };
 
   const timePercentage = (gameState.timeLeft / (timeLimit * 1000)) * 100;
   const showBlueBar = false;
@@ -509,8 +518,7 @@ const Game: React.FC<GameProps> = ({
         audioOn={audioOn}
         score={gameState.score}
         bestScore={bestScore}
-        // gamePoint={calculateGamePoints(gameState.score)}
-        gamePoint={0}
+        gamePoint={calculateGamePoints(gameState.score)}
         onBackToMenu={onBackToMenu}
         setAudioOn={setAudioOn}
         onRestartGame={restartGame}
