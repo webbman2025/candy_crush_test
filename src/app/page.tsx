@@ -1,0 +1,419 @@
+"use client";
+
+import { Box } from "@mui/material";
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import Landing from "@components/pages/landing/Landing";
+import Game from "@components/pages/game/Game";
+import GameInstructionsDialog from "@components/dialogs/GameInstructionsDialog";
+import { gameConfig } from "@config/gameConfig";
+import { useRouter } from "next/navigation";
+
+// Configuration - now imported from centralized config
+const { board, time, scoring, combo, assets } = gameConfig;
+const { width: boardWidth, height: boardHeight } = board;
+const { limit: timeLimit, bonusPerMatch: timeBonusPerMatch } = time;
+const {
+  pointsPerItem,
+  bonusPointsPerExtraMatch,
+  gamePointBaseMinimumScore,
+  gamePointBase,
+  gamePointHighest,
+} = scoring;
+const { multipliers: comboMultipliers } = combo;
+const { items, comboPopups: comboPopupImages } = assets;
+const { sounds } = gameConfig;
+
+export default function Home() {
+  const [page, setPage] = useState<"landing" | "game" | "result">("landing");
+  const [audioOn, setAudioOn] = useState(true);
+  const [bestScore, setBestScore] = useState(0);
+  const [openInstructionsDialog, setOpenInstructionsDialog] = useState(false);
+
+  // Audio Context setup with useRef to persist across renders
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
+  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const pauseTimeRef = useRef<number>(0);
+  const isPlayingRef = useRef<boolean>(false);
+  const shouldBePlayingRef = useRef<boolean>(false); // Track if audio should be playing
+  const isRedirectedToPlay = useRef<boolean>(false);
+  
+
+  // Initialize AudioContext and load audio
+  useEffect(() => {
+    const initAudio = async () => {
+      try {
+        // Create AudioContext
+        audioContextRef.current = new (window.AudioContext ||
+          (window as any).webkitAudioContext)();
+
+        // Create gain node for volume control
+        gainNodeRef.current = audioContextRef.current.createGain();
+        gainNodeRef.current.gain.value = sounds.background.volume;
+        gainNodeRef.current.connect(audioContextRef.current.destination);
+
+        // Load and decode audio file
+        const response = await fetch(sounds.background.path);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBufferRef.current = await audioContextRef.current.decodeAudioData(
+          arrayBuffer
+        );
+      } catch (error) {
+        console.warn("Failed to initialize audio:", error);
+      }
+    };
+
+    initAudio();
+
+    // Cleanup on unmount
+    return () => {
+      if (audioSourceRef.current) {
+        audioSourceRef.current.stop();
+        audioSourceRef.current.disconnect();
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
+
+  // Disable mobile browser zoom
+  useEffect(() => {
+    document.body.style.zoom = "1";
+    const eventListener = (e: any) => {
+      e.preventDefault();
+      // special hack to prevent zoom-to-tabs gesture in safari
+      document.body.style.zoom = "1";
+    };
+
+    document.addEventListener("gesturestart", eventListener);
+    document.addEventListener("gesturechange", eventListener);
+    document.addEventListener("gestureend", eventListener);
+    return () => {
+      document.removeEventListener("gesturestart", eventListener);
+      document.removeEventListener("gesturechange", eventListener);
+      document.removeEventListener("gestureend", eventListener);
+    };
+  }, []);
+
+  // Audio control functions
+  const playAudio = async () => {
+    if (
+      !audioContextRef.current ||
+      !audioBufferRef.current ||
+      !gainNodeRef.current
+    )
+      return;
+
+    try {
+      // Resume AudioContext if suspended (common on iOS)
+      if (audioContextRef.current.state === "suspended") {
+        await audioContextRef.current.resume();
+      }
+
+      // Completely clean up any previous source instance
+      if (audioSourceRef.current) {
+        try {
+          audioSourceRef.current.stop();
+        } catch (error) {
+          // Ignore errors if source is already stopped
+          console.warn("Failed to stop audio source:", error);
+        }
+        audioSourceRef.current.disconnect();
+        audioSourceRef.current.onended = null; // Clear event handler
+        audioSourceRef.current = null; // Nullify reference
+      }
+
+      // Reset state to ensure clean start
+      isPlayingRef.current = false;
+
+      // Create completely new source instance
+      audioSourceRef.current = audioContextRef.current.createBufferSource();
+      audioSourceRef.current.buffer = audioBufferRef.current;
+      audioSourceRef.current.loop = true;
+      audioSourceRef.current.connect(gainNodeRef.current);
+
+      // Start from pause time or beginning
+      const offset = pauseTimeRef.current % audioBufferRef.current.duration;
+      audioSourceRef.current.start(0, offset);
+      startTimeRef.current = audioContextRef.current.currentTime - offset;
+      isPlayingRef.current = true;
+      shouldBePlayingRef.current = true;
+
+      // Handle source ending (shouldn't happen with loop, but just in case)
+      audioSourceRef.current.onended = () => {
+        isPlayingRef.current = false;
+        audioSourceRef.current = null; // Clean up reference when ended
+      };
+    } catch (error) {
+      console.warn("Failed to play audio:", error);
+      // Ensure clean state even on error
+      isPlayingRef.current = false;
+      if (audioSourceRef.current) {
+        audioSourceRef.current = null;
+      }
+    }
+  };
+
+  const pauseAudio = () => {
+    if (
+      audioSourceRef.current &&
+      isPlayingRef.current &&
+      audioContextRef.current
+    ) {
+      // Calculate current position
+      const elapsed =
+        audioContextRef.current.currentTime - startTimeRef.current;
+      pauseTimeRef.current = elapsed;
+
+      audioSourceRef.current.stop();
+      audioSourceRef.current.disconnect();
+      audioSourceRef.current = null;
+      isPlayingRef.current = false;
+    }
+  };
+
+  // Handle audio playback based on audioOn state
+  useEffect(() => {
+    if (audioOn && audioBufferRef.current) {
+      shouldBePlayingRef.current = true;
+      playAudio();
+    } else {
+      shouldBePlayingRef.current = false;
+      pauseAudio();
+    }
+  }, [audioOn]);
+
+  // Check AudioContext state periodically and attempt to resume if needed
+  useEffect(() => {
+    const checkAudioContext = async () => {
+      // Don't interfere if document is hidden
+      if (document.hidden) return;
+
+      if (audioContextRef.current && shouldBePlayingRef.current) {
+        if (audioContextRef.current.state === "suspended") {
+          console.log(
+            "Periodic check: AudioContext is suspended, waiting for user interaction"
+          );
+        } else if (
+          audioContextRef.current.state === "running" &&
+          !isPlayingRef.current
+        ) {
+          // AudioContext is running but audio isn't playing - restart it
+          console.log("Periodic check: Restarting audio playback");
+          playAudio();
+        }
+      }
+    };
+
+    const interval = setInterval(checkAudioContext, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Handle iOS autoplay restrictions - resume audio on user interaction
+  useEffect(() => {
+    const handleUserInteraction = async () => {
+      // Don't interfere if document is hidden
+      if (document.hidden) return;
+
+      if (
+        audioContextRef.current &&
+        audioContextRef.current.state === "suspended" &&
+        shouldBePlayingRef.current
+      ) {
+        try {
+          console.log("User interaction: Resuming suspended AudioContext");
+          await audioContextRef.current.resume();
+          if (shouldBePlayingRef.current && !isPlayingRef.current) {
+            playAudio();
+          }
+        } catch (error) {
+          console.warn("Failed to resume audio context:", error);
+        }
+      }
+    };
+
+    // Listen for various user interaction events
+    const events = ["touchstart", "touchend", "mousedown", "keydown", "click"];
+    events.forEach((event) => {
+      document.addEventListener(event, handleUserInteraction, {
+        once: true,
+        passive: true,
+      });
+    });
+
+    // Cleanup
+    return () => {
+      events.forEach((event) => {
+        document.removeEventListener(event, handleUserInteraction);
+      });
+    };
+  }, []);
+
+  // Handle background to foreground transition
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      console.log(
+        "Visibility change handler - hidden:",
+        document.hidden,
+        "AudioContext state:",
+        audioContextRef.current?.state,
+        "shouldBePlaying:",
+        shouldBePlayingRef.current,
+        "isPlaying:",
+        isPlayingRef.current
+      );
+
+      if (document.hidden) {
+        // Page is now hidden - pause audio if playing
+        if (isPlayingRef.current) {
+          console.log("Visibility handler: Page hidden - pausing audio");
+          pauseAudio();
+        }
+      } else if (
+        !document.hidden &&
+        shouldBePlayingRef.current &&
+        audioContextRef.current
+      ) {
+        // Page is now visible and audio should be playing
+        console.log(
+          "Visibility handler: Page is now visible and audio should be playing"
+        );
+        try {
+          if (audioContextRef.current.state === "suspended") {
+            console.log(
+              "Visibility handler: Attempting to resume suspended AudioContext"
+            );
+            await audioContextRef.current.resume();
+          }
+
+          // If AudioContext is running but audio isn't playing, restart it
+          if (
+            audioContextRef.current.state === "running" &&
+            !isPlayingRef.current
+          ) {
+            console.log("Visibility handler: Restarting audio playback");
+            playAudio();
+          }
+        } catch (error) {
+          console.warn("Failed to resume audio on visibility change:", error);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Cleanup - removed focus event listener to avoid conflicts
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Fetch user's highest score from API on component mount
+  useEffect(() => {
+    const fetchHighestScore = async () => {
+      try {
+        const response = await axios.get(
+          "/3Care/GamifyUserHighestScore.do",
+          {
+            params: {
+              campaignID: "gamehub",
+              name: "candy-crush",
+            },
+          }
+        );
+        if (response.data && response.data.code === 200) {
+          setBestScore(response.data.score || 0);
+        } else {
+          console.warn("API returned non-success code:", response.data);
+          setBestScore(0);
+        }
+      } catch (error) {
+        console.error("Error fetching highest score:", error);
+        setBestScore(0);
+      }
+    };
+
+    fetchHighestScore();
+  }, []);
+
+  // Directly play game
+  useEffect(() => {
+    const params = new URLSearchParams(document.location.search);
+    if (params.get("page") === "game" && !isRedirectedToPlay.current) {
+      isRedirectedToPlay.current = true;
+      handlePlay();
+    }
+  });
+
+  const handlePlay = () => {
+    if (bestScore === 0) {
+      setOpenInstructionsDialog(true);
+    } else {
+      setPage("game");
+    }
+  };
+
+  const handlePlayFromTutorial = () => {
+    setPage("game");
+    setOpenInstructionsDialog(false);
+  };
+
+  const handleBackToMenu = () => {
+    setPage("landing");
+  };
+
+  const handleCloseInstructions = () => {
+    setOpenInstructionsDialog(false);
+  };
+
+  const router = useRouter();
+
+  const handleLeaderBoard = () => {
+    router.push("/leaderboard.jsp?req_d=my3");
+  };
+
+  return (
+    <Box id="root">
+      {page === "landing" && (
+        <Landing
+          audioOn={audioOn}
+          setAudioOn={setAudioOn}
+          onPlay={handlePlay}
+          onInstructions={() => setOpenInstructionsDialog(true)}
+          onLeaderBoard={handleLeaderBoard}
+        />
+      )}
+      {page === "game" && (
+        <Game
+          boardWidth={boardWidth}
+          boardHeight={boardHeight}
+          timeLimit={timeLimit}
+          timeBonusPerMatch={timeBonusPerMatch}
+          gamePointBaseMinimumScore={gamePointBaseMinimumScore}
+          gamePointBase={gamePointBase}
+          gamePointHighest={gamePointHighest}
+          items={items}
+          bestScore={bestScore}
+          pointsPerItem={pointsPerItem}
+          bonusPointsPerExtraMatch={bonusPointsPerExtraMatch}
+          comboMultipliers={comboMultipliers}
+          comboPopupImages={comboPopupImages}
+          audioOn={audioOn}
+          setAudioOn={setAudioOn}
+          setBestScore={setBestScore}
+          onBackToMenu={handleBackToMenu}
+        />
+      )}
+
+      <GameInstructionsDialog
+        open={openInstructionsDialog}
+        onPlay={handlePlayFromTutorial}
+        onClose={handleCloseInstructions}
+      />
+    </Box>
+  );
+}

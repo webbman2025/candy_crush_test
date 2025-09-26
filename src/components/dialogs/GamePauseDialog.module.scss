@@ -1,0 +1,72 @@
+.root {
+  :global {
+    .MuiBackdrop-root {
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+    }
+
+    .MuiDialog-container {
+      align-items: flex-start;
+    }
+
+    .MuiPaper-root {
+      margin: 0;
+      background-color: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      padding-top: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+      padding-bottom: clamp(
+        0px,
+        calc(20 / 390 * 100vw),
+        calc(20 / 390 * 600px)
+      );
+      max-width: clamp(0px, calc(360 / 390 * 100vw), calc(360 / 390 * 600px));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: unset !important;
+      min-height: 100% !important;
+    }
+  }
+}
+
+.controlsContainer {
+  margin-bottom: clamp(0px, calc(8 / 390 * 100vw), calc(8 / 390 * 600px));
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.controlButton {
+  top: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+  right: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+  width: clamp(50px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
+  height: clamp(50px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.titleImage {
+  position: relative;
+  width: clamp(0px, calc(360 / 390 * 100vw), calc(360 / 390 * 600px));
+  margin-bottom: clamp(0px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
+}
+
+.button {
+  width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
+
+  & + .button {
+    margin-top: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+}

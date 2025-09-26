@@ -1,0 +1,26 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #246b86;
+  border-radius: 10px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.verticalSeparator {
+  width: clamp(0px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px));
+  background-color: #267b9a;
+  flex-shrink: 0;
+}
+
+.horizontalSeparator {
+  height: clamp(0px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px));
+  background-color: #267b9a;
+  flex-shrink: 0;
+}

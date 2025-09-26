@@ -1,0 +1,79 @@
+.root {
+  :global {
+    .MuiBackdrop-root {
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(16px);
+    }
+
+    .MuiPaper-root {
+      margin: 0;
+      background-color: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      max-width: clamp(0px, calc(330 / 390 * 100vw), calc(330 / 390 * 600px));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: unset !important;
+      min-height: unset !important;
+    }
+  }
+}
+
+.titleImage {
+  position: relative;
+  width: clamp(0px, calc(293 / 390 * 100vw), calc(293 / 390 * 600px));
+}
+
+.contentContainer {
+  margin-top: clamp(calc(-30 / 390 * 600px), calc(-30 / 390 * 100vw), 0px);
+  padding: clamp(0px, calc(45 / 390 * 100vw), calc(45 / 390 * 600px))
+    clamp(0px, calc(28 / 390 * 100vw), calc(28 / 390 * 600px))
+    clamp(0px, calc(25 / 390 * 100vw), calc(25 / 390 * 600px))
+    clamp(0px, calc(28 / 390 * 100vw), calc(28 / 390 * 600px));
+  // border-radius: clamp(0px, calc(40 / 390 * 100vw), calc(40 / 390 * 600px));
+  border-radius: 40px;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.animationContainer {
+  img {
+    width: 100%;
+    height: auto;
+    margin-bottom: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+    margin-top: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
+  }
+}
+
+.contentText {
+  font-size: clamp(
+    0px,
+    calc(16 / 390 * 100vw),
+    calc(16 / 390 * 600px)
+  ) !important;
+}
+
+.playButton {
+  margin-top: clamp(0px, calc(55 / 390 * 100vw), calc(55 / 390 * 600px));
+  margin-bottom: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
+  width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
+  animation: animePulse 2s infinite ease-in-out;
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+@keyframes animePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

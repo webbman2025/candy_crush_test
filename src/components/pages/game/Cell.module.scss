@@ -1,0 +1,90 @@
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  position: relative;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .itemImage {
+    object-fit: contain;
+    pointer-events: none;
+    width: 90%;
+    height: 90%;
+  }
+}
+
+.matched {
+  // Remove the pulse animation and opacity change
+  // Items will now use the highlight border and star instead
+}
+
+.selected {
+  cursor: grabbing;
+}
+
+// Highlight border - 100% of cell size, quick fade in
+.highlightBorder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+  animation: highlightFadeInOut 0.4s ease-out forwards;
+}
+
+// Highlight star - 60% of cell size, quick fade in with scaling
+.highlightStar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+  transform-origin: center center;
+  animation: highlightStarScaleInOut 0.4s ease-out forwards;
+}
+
+@keyframes highlightFadeInOut {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.8;
+  }
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes highlightStarScaleInOut {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  15% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(3);
+  }
+  75% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(7);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(7);
+  }
+}
