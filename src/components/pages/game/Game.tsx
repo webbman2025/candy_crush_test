@@ -40,6 +40,7 @@ interface GameProps {
   setBestScore: (bestScore: number) => void;
   onBackToMenu: () => void;
   onCriticalTimeChange?: (isCritical: boolean) => void;
+  fetchHighestScore: () => void;
 }
 
 const Game: React.FC<GameProps> = ({
@@ -61,6 +62,7 @@ const Game: React.FC<GameProps> = ({
   setBestScore,
   onBackToMenu,
   onCriticalTimeChange,
+  fetchHighestScore,
 }) => {
   const lastResumeTimeRef = useRef<number>(Date.now());
   const accumulatedTimeRef = useRef<number>(0);
@@ -289,6 +291,7 @@ const Game: React.FC<GameProps> = ({
     bonusTimeRef.current = 0; // Reset bonus time
     comboCountRef.current = 0;
     highestComboRef.current = 1;
+    fetchHighestScore(); // Fetch highest score from server
     setComboPopup(null);
     setComboPopupFading(false);
     setIsCriticalTime(false); // Reset critical time state
