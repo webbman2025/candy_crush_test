@@ -313,30 +313,30 @@ export default function Home() {
   }, []);
 
   // Fetch user's highest score from API on component mount
-  useEffect(() => {
-    const fetchHighestScore = async () => {
-      try {
-        const response = await axios.get(
-          "/3Care/GamifyUserHighestScore.do",
-          {
-            params: {
-              campaignID: "gamehub",
-              name: "candy-crush",
-            },
-          }
-        );
-        if (response.data && response.data.code === 200) {
-          setBestScore(response.data.score || 0);
-        } else {
-          console.warn("API returned non-success code:", response.data);
-          setBestScore(0);
+  const fetchHighestScore = async () => {
+    try {
+      const response = await axios.get(
+        "/3Care/GamifyUserHighestScore.do",
+        {
+          params: {
+            campaignID: "gamehub",
+            name: "candy-crush",
+          },
         }
-      } catch (error) {
-        console.error("Error fetching highest score:", error);
-        setBestScore(0);
+      );
+      if (response.data && response.data.code === 200) {
+        setBestScore(response.data.score || 0);
+      } else {
+        console.warn("API returned non-success code:", response.data);
+        window.location.reload(); // Reload page if API fails
       }
-    };
+    } catch (error) {
+      console.error("Error fetching highest score:", error);
+      setBestScore(0);
+    }
+  };
 
+  useEffect(() => {
     fetchHighestScore();
   }, []);
 
@@ -406,6 +406,7 @@ export default function Home() {
           setAudioOn={setAudioOn}
           setBestScore={setBestScore}
           onBackToMenu={handleBackToMenu}
+          fetchHighestScore={fetchHighestScore}
         />
       )}
 
