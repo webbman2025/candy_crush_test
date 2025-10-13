@@ -53,7 +53,7 @@
     calc(20 / 390 * 600px)
   ) !important;
   text-align: center;
-  color: white;
+  color: #000;
 }
 
 .pauseButton {
@@ -133,7 +133,7 @@
 
 .timeBarProgressContainer {
   position: absolute;
-  top: clamp(0px, calc(8 / 390 * 100vw), calc(8 / 390 * 600px));
+  top: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
   left: clamp(0px, calc(8 / 390 * 100vw), calc(8 / 390 * 600px));
   width: clamp(0px, calc(352 / 390 * 100vw), calc(352 / 390 * 600px));
 }
@@ -161,19 +161,30 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1000;
+  z-index: 1001;
   pointer-events: none;
-  animation: comboPopupAnimation 0.3s ease-out;
+  animation: comboPopupAnimation 0.7s ease-out;
 }
 
 .comboPopupFading {
-  animation: comboPopupFadeOut 0.3s ease-in forwards;
+  animation: comboPopupFadeOut 0.7s ease-in forwards;
 }
 
 .comboPopupImage {
-  width: clamp(120px, calc(200 / 390 * 100vw), calc(200 / 390 * 600px));
+  width: clamp(180px, calc(300 / 390 * 100vw), calc(300 / 390 * 600px));
   height: auto;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.comboPopupBackground {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  background: #00000040;
 }
 
 @keyframes comboPopupAnimation {

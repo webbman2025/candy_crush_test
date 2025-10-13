@@ -24,6 +24,7 @@
 .titleImage {
   position: relative;
   width: clamp(0px, calc(293 / 390 * 100vw), calc(293 / 390 * 600px));
+  z-index: 1;
 }
 
 .contentContainer {
@@ -34,7 +35,10 @@
     clamp(0px, calc(28 / 390 * 100vw), calc(28 / 390 * 600px));
   // border-radius: clamp(0px, calc(40 / 390 * 100vw), calc(40 / 390 * 600px));
   border-radius: 40px;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: #303030;
+  backdrop-filter: blur(16.299999237060547px);
+  box-shadow: 4px 4px 0px 0px #FFFFFF40 inset;
+  color: #FFF;
 }
 
 .animationContainer {

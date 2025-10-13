@@ -10,6 +10,8 @@ import AppImage from "@components/AppImage";
 import { gameConfig } from "@config/gameConfig";
 import { GameState } from "@/types/game";
 import { useRouter } from "next/navigation";
+import Lottie from 'lottie-react';
+import comboBackgroundAnimation from '../../../../public/lottie/combo-background.json';
 
 interface GameProps {
   boardWidth: number;
@@ -48,9 +50,9 @@ const Game: React.FC<GameProps> = ({
   boardHeight = 12,
   timeLimit = 60,
   timeBonusPerMatch = 1,
-  gamePointBaseMinimumScore = 20,
-  gamePointBase = 25,
-  gamePointHighest = 50,
+  // gamePointBaseMinimumScore = 20,
+  // gamePointBase = 25,
+  // gamePointHighest = 50,
   bestScore = 0,
   items = [],
   pointsPerItem = 10,
@@ -267,16 +269,16 @@ const Game: React.FC<GameProps> = ({
       setComboPopup(popupImage);
       setComboPopupFading(false);
 
-      // Start fade-out animation after 600ms
+      // Start fade-out animation after 700ms
       setTimeout(() => {
         setComboPopupFading(true);
-      }, 600);
+      }, 700);
 
-      // Hide popup after fade-out animation completes (600ms + 300ms fade)
+      // Hide popup after fade-out animation completes (700ms + 500ms fade)
       setTimeout(() => {
         setComboPopup(null);
         setComboPopupFading(false);
-      }, 900);
+      }, 1200);
     }
 
     // Reset both counters
@@ -338,15 +340,15 @@ const Game: React.FC<GameProps> = ({
   };
 
   // Calculate game points based on score
-  const calculateGamePoints = (score: number): number => {
-    if (score > bestScore) {
-      return gamePointHighest; // 50 points for beating best score
-    } else if (score >= gamePointBaseMinimumScore) {
-      return gamePointBase; // 25 points for reaching minimum score
-    } else {
-      return 0; // No points
-    }
-  };
+  // const calculateGamePoints = (score: number): number => {
+  //   if (score > bestScore) {
+  //     return gamePointHighest; // 50 points for beating best score
+  //   } else if (score >= gamePointBaseMinimumScore) {
+  //     return gamePointBase; // 25 points for reaching minimum score
+  //   } else {
+  //     return 0; // No points
+  //   }
+  // };
 
   const timePercentage = (gameState.timeLeft / (timeLimit * 1000)) * 100;
   const showBlueBar = false;
@@ -357,6 +359,10 @@ const Game: React.FC<GameProps> = ({
 
   const handleLeaderBoard = () => {
     router.push("/leaderboard.jsp?req_d=my3");
+  };
+
+  const redirectToRandomPrize = () => {
+    router.push(window.location.origin + "/3Care/RewardRandomPrize.do?lang=chi&campaign=gamehub_candy");
   };
 
   return (
@@ -433,16 +439,19 @@ const Game: React.FC<GameProps> = ({
 
             {/* Combo Popup */}
             {comboPopup && !gameState.isGameOver && (
-              <div
-                className={`${styles.comboPopup} ${
-                  comboPopupFading ? styles.comboPopupFading : ""
-                }`}
-              >
-                <AppImage
-                  src={comboPopup}
-                  alt="Combo"
-                  className={styles.comboPopupImage}
-                />
+              <div>
+                <Lottie animationData={comboBackgroundAnimation} loop={true} autoplay={true} alt="Combo background" className={styles.comboPopupBackground}/>
+                <div
+                  className={`${styles.comboPopup} ${
+                    comboPopupFading ? styles.comboPopupFading : ""
+                  }`}
+                >
+                  <AppImage
+                    src={comboPopup}
+                    alt="Combo"
+                    className={styles.comboPopupImage}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -521,11 +530,13 @@ const Game: React.FC<GameProps> = ({
         audioOn={audioOn}
         score={gameState.score}
         bestScore={bestScore}
-        gamePoint={calculateGamePoints(gameState.score)}
+        // gamePoint={calculateGamePoints(gameState.score)}
+        gamePoint={0}
         onBackToMenu={onBackToMenu}
         setAudioOn={setAudioOn}
         onRestartGame={restartGame}
         onLeaderboard={handleLeaderBoard}
+        redirectToRandomPrize={redirectToRandomPrize}
       />
 
       {/* Preload combo popup images - invisible placeholders for caching */}
