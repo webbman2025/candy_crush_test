@@ -298,7 +298,7 @@ const Board: React.FC<BoardProps> = ({
     // Replace matched items after a delay
     setTimeout(() => {
       replaceMatches(matches);
-    }, 250);
+    }, 350);
 
     // Hide matched cells by setting their opacity to 0
     setTimeout(() => {
@@ -313,6 +313,9 @@ const Board: React.FC<BoardProps> = ({
 
   const replaceMatches = async (matches: { row: number; col: number }[]) => {
     const newBoard = [...board];
+
+    // const dropEase = "bounce.out"; // Original GSAP bounce
+    const dropEase = "power3.out";
 
     // Create placeholders for cells above matched items and hide actual cells
     const placeholders: {
@@ -443,7 +446,7 @@ const Board: React.FC<BoardProps> = ({
             gsap.to(placeholder, {
               y: `+=${totalFallDistance}`,
               duration: 0.3 + emptySpacesBelowCount * 0.1, // Longer duration for longer falls
-              ease: "bounce.out",
+              ease: dropEase,
               onComplete: resolve,
             });
           });
@@ -604,7 +607,7 @@ const Board: React.FC<BoardProps> = ({
         gsap.to(placeholder, {
           y: `+=${fallDistance}`,
           duration: 0.4 + (fallDistance / 100) * 0.1, // Duration based on fall distance
-          ease: "bounce.out",
+          ease: dropEase,
           onComplete: resolve,
         });
       });
@@ -896,7 +899,10 @@ const Board: React.FC<BoardProps> = ({
     return items[type - 1] || items[0]; // Use items array, fallback to first item
   };
 
-  const cellSize = (390 - 12 - 12 - (width - 1) * 2) / width;
+  let cellSize = (390 - 12 - 12 - (width - 1) * 2) / width;
+  if (window && window.innerWidth < 389) {
+    cellSize = cellSize * 0.92;
+  }
   return (
     <div
       className={styles.board}

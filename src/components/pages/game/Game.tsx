@@ -10,6 +10,8 @@ import AppImage from "@components/AppImage";
 import { gameConfig } from "@config/gameConfig";
 import { GameState } from "@/types/game";
 import { useRouter } from "next/navigation";
+import Lottie from 'lottie-react';
+import comboBackgroundAnimation from '../../../../public/lottie/combo-background.json';
 
 interface GameProps {
   boardWidth: number;
@@ -39,6 +41,7 @@ interface GameProps {
   setAudioOn: (audioOn: boolean) => void;
   setBestScore: (bestScore: number) => void;
   onBackToMenu: () => void;
+  onCriticalTimeChange?: (isCritical: boolean) => void;
   fetchHighestScore: () => void;
 }
 
@@ -60,6 +63,7 @@ const Game: React.FC<GameProps> = ({
   setAudioOn,
   setBestScore,
   onBackToMenu,
+  onCriticalTimeChange,
   fetchHighestScore,
 }) => {
   const lastResumeTimeRef = useRef<number>(Date.now());
@@ -151,11 +155,12 @@ const Game: React.FC<GameProps> = ({
         }));
 
         const timePercentage = (newTimeLeft / (timeLimit * 1000)) * 100;
-        setIsCriticalTime(
+        const newIsCriticalTime =
           timePercentage <= gameConfig.time.barThresholds.red &&
-            timePercentage > 0 &&
-            !gameState.isGameOver
-        );
+          timePercentage > 0 &&
+          !gameState.isGameOver;
+
+        setIsCriticalTime(newIsCriticalTime);
       }, 10);
     }
 
@@ -163,6 +168,11 @@ const Game: React.FC<GameProps> = ({
       if (timer) clearInterval(timer);
     };
   }, [gameState.isGameOver, gameState.isPaused, timeLimit]);
+
+  // Handle critical time change callback in useEffect to avoid setState during render
+  useEffect(() => {
+    onCriticalTimeChange?.(isCriticalTime);
+  }, [isCriticalTime, onCriticalTimeChange]);
 
   useEffect(() => {
     if (gameState.isGameOver) {
@@ -259,16 +269,16 @@ const Game: React.FC<GameProps> = ({
       setComboPopup(popupImage);
       setComboPopupFading(false);
 
-      // Start fade-out animation after 600ms
+      // Start fade-out animation after 700ms
       setTimeout(() => {
         setComboPopupFading(true);
-      }, 600);
+      }, 700);
 
-      // Hide popup after fade-out animation completes (600ms + 300ms fade)
+      // Hide popup after fade-out animation completes (700ms + 500ms fade)
       setTimeout(() => {
         setComboPopup(null);
         setComboPopupFading(false);
-      }, 900);
+      }, 1200);
     }
 
     // Reset both counters
@@ -284,9 +294,11 @@ const Game: React.FC<GameProps> = ({
     comboCountRef.current = 0;
     highestComboRef.current = 1;
     fetchHighestScore(); // Fetch highest score from server
+    fetchHighestScore(); // Fetch highest score from server
     setComboPopup(null);
     setComboPopupFading(false);
     setIsCriticalTime(false); // Reset critical time state
+    onCriticalTimeChange?.(false); // Notify parent that critical time is over
     setGameState({
       score: 0,
       timeLeft: timeLimit * 1000,
@@ -348,6 +360,10 @@ const Game: React.FC<GameProps> = ({
 
   const handleLeaderBoard = () => {
     router.push("/leaderboard.jsp?req_d=my3");
+  };
+
+  const redirectToRandomPrize = () => {
+    router.push(window.location.origin + "/3Care/RewardRandomPrize.do?lang=chi&campaign=gamehub_candy");
   };
 
   return (
@@ -424,16 +440,19 @@ const Game: React.FC<GameProps> = ({
 
             {/* Combo Popup */}
             {comboPopup && !gameState.isGameOver && (
-              <div
-                className={`${styles.comboPopup} ${
-                  comboPopupFading ? styles.comboPopupFading : ""
-                }`}
-              >
-                <AppImage
-                  src={comboPopup}
-                  alt="Combo"
-                  className={styles.comboPopupImage}
-                />
+              <div>
+                <Lottie animationData={comboBackgroundAnimation} loop={true} autoplay={true} alt="Combo background" className={styles.comboPopupBackground}/>
+                <div
+                  className={`${styles.comboPopup} ${
+                    comboPopupFading ? styles.comboPopupFading : ""
+                  }`}
+                >
+                  <AppImage
+                    src={comboPopup}
+                    alt="Combo"
+                    className={styles.comboPopupImage}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -518,6 +537,7 @@ const Game: React.FC<GameProps> = ({
         setAudioOn={setAudioOn}
         onRestartGame={restartGame}
         onLeaderboard={handleLeaderBoard}
+        redirectToRandomPrize={redirectToRandomPrize}
       />
 
       {/* Preload combo popup images - invisible placeholders for caching */}

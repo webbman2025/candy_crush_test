@@ -29,6 +29,7 @@ export default function Home() {
   const [audioOn, setAudioOn] = useState(true);
   const [bestScore, setBestScore] = useState(0);
   const [openInstructionsDialog, setOpenInstructionsDialog] = useState(false);
+  const [isCriticalTime, setIsCriticalTime] = useState(false);
 
   // Audio Context setup with useRef to persist across renders
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -51,21 +52,28 @@ export default function Home() {
           (window as any).webkitAudioContext)();
 
         // Create gain node for volume control
+
+        let tempBackgroundSound = sounds.background;
+        if (page == "game") {
+          tempBackgroundSound = sounds.gameBackground;
+        }
         gainNodeRef.current = audioContextRef.current.createGain();
-        gainNodeRef.current.gain.value = sounds.background.volume;
+        gainNodeRef.current.gain.value = tempBackgroundSound.volume;
         gainNodeRef.current.connect(audioContextRef.current.destination);
 
         // Load and decode audio file
-        const response = await fetch(sounds.background.path);
+        const response = await fetch(tempBackgroundSound.path);
         const arrayBuffer = await response.arrayBuffer();
         audioBufferRef.current = await audioContextRef.current.decodeAudioData(
           arrayBuffer
         );
+
+        controlAudio();
       } catch (error) {
         console.warn("Failed to initialize audio:", error);
       }
     };
-
+    
     initAudio();
 
     // Cleanup on unmount
@@ -78,7 +86,7 @@ export default function Home() {
         audioContextRef.current.close();
       }
     };
-  }, []);
+  }, [page]);
 
   // Disable mobile browser zoom
   useEffect(() => {
@@ -99,8 +107,25 @@ export default function Home() {
     };
   }, []);
 
+  // Helper function to get current audio position
+  const getCurrentAudioPosition = (): number => {
+    if (
+      !audioContextRef.current ||
+      !audioBufferRef.current ||
+      !isPlayingRef.current
+    ) {
+      return pauseTimeRef.current;
+    }
+
+    const elapsed = audioContextRef.current.currentTime - startTimeRef.current;
+    return elapsed % audioBufferRef.current.duration;
+  };
+
   // Audio control functions
-  const playAudio = async () => {
+  const playAudio = async (
+    playbackRate: number = 1,
+    preservePosition: boolean = false
+  ) => {
     if (
       !audioContextRef.current ||
       !audioBufferRef.current ||
@@ -113,6 +138,11 @@ export default function Home() {
       if (audioContextRef.current.state === "suspended") {
         await audioContextRef.current.resume();
       }
+
+      // Get current position before stopping if we want to preserve it
+      const currentPosition = preservePosition
+        ? getCurrentAudioPosition()
+        : pauseTimeRef.current;
 
       // Completely clean up any previous source instance
       if (audioSourceRef.current) {
@@ -134,10 +164,11 @@ export default function Home() {
       audioSourceRef.current = audioContextRef.current.createBufferSource();
       audioSourceRef.current.buffer = audioBufferRef.current;
       audioSourceRef.current.loop = true;
+      audioSourceRef.current.playbackRate.value = playbackRate;
       audioSourceRef.current.connect(gainNodeRef.current);
 
-      // Start from pause time or beginning
-      const offset = pauseTimeRef.current % audioBufferRef.current.duration;
+      // Start from current position, pause time, or beginning
+      const offset = currentPosition % audioBufferRef.current.duration;
       audioSourceRef.current.start(0, offset);
       startTimeRef.current = audioContextRef.current.currentTime - offset;
       isPlayingRef.current = true;
@@ -176,16 +207,34 @@ export default function Home() {
     }
   };
 
+  // Function to change playback rate without restarting from beginning
+  const changePlaybackRate = async (newRate: number) => {
+    if (audioOn && audioBufferRef.current && shouldBePlayingRef.current) {
+      await playAudio(newRate, true); // preservePosition = true
+    }
+  };
+
   // Handle audio playback based on audioOn state
-  useEffect(() => {
+  const controlAudio = () => {
     if (audioOn && audioBufferRef.current) {
       shouldBePlayingRef.current = true;
-      playAudio();
+      playAudio(isCriticalTime ? 2 : 1);
     } else {
       shouldBePlayingRef.current = false;
       pauseAudio();
     }
-  }, [audioOn]);
+  }
+
+  useEffect(() => {
+    controlAudio();
+  }, [audioOn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle playback rate changes when critical time state changes
+  useEffect(() => {
+    if (audioOn && audioBufferRef.current && shouldBePlayingRef.current) {
+      changePlaybackRate(isCriticalTime ? 2 : 1);
+    }
+  }, [isCriticalTime]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check AudioContext state periodically and attempt to resume if needed
   useEffect(() => {
@@ -204,14 +253,14 @@ export default function Home() {
         ) {
           // AudioContext is running but audio isn't playing - restart it
           console.log("Periodic check: Restarting audio playback");
-          playAudio();
+          playAudio(isCriticalTime ? 2 : 1);
         }
       }
     };
 
     const interval = setInterval(checkAudioContext, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle iOS autoplay restrictions - resume audio on user interaction
   useEffect(() => {
@@ -228,7 +277,7 @@ export default function Home() {
           console.log("User interaction: Resuming suspended AudioContext");
           await audioContextRef.current.resume();
           if (shouldBePlayingRef.current && !isPlayingRef.current) {
-            playAudio();
+            playAudio(isCriticalTime ? 2 : 1);
           }
         } catch (error) {
           console.warn("Failed to resume audio context:", error);
@@ -251,7 +300,7 @@ export default function Home() {
         document.removeEventListener(event, handleUserInteraction);
       });
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle background to foreground transition
   useEffect(() => {
@@ -296,7 +345,7 @@ export default function Home() {
             !isPlayingRef.current
           ) {
             console.log("Visibility handler: Restarting audio playback");
-            playAudio();
+            playAudio(isCriticalTime ? 2 : 1);
           }
         } catch (error) {
           console.warn("Failed to resume audio on visibility change:", error);
@@ -310,7 +359,7 @@ export default function Home() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch user's highest score from API on component mount
   const fetchHighestScore = async () => {
@@ -335,7 +384,30 @@ export default function Home() {
       setBestScore(0);
     }
   };
+  const fetchHighestScore = async () => {
+    try {
+      const response = await axios.get(
+        "/3Care/GamifyUserHighestScore.do",
+        {
+          params: {
+            campaignID: "gamehub",
+            name: "candy-crush",
+          },
+        }
+      );
+      if (response.data && response.data.code === 200) {
+        setBestScore(response.data.score || 0);
+      } else {
+        console.warn("API returned non-success code:", response.data);
+        window.location.reload(); // Reload page if API fails
+      }
+    } catch (error) {
+      console.error("Error fetching highest score:", error);
+      setBestScore(0);
+    }
+  };
 
+  useEffect(() => {
   useEffect(() => {
     fetchHighestScore();
   }, []);
@@ -375,6 +447,10 @@ export default function Home() {
   const handleLeaderBoard = () => {
     router.push("/leaderboard.jsp?req_d=my3");
   };
+  
+  const handleCriticalTimeChange = (isCritical: boolean) => {
+    setIsCriticalTime(isCritical);
+  };
 
   return (
     <Box id="root">
@@ -406,6 +482,7 @@ export default function Home() {
           setAudioOn={setAudioOn}
           setBestScore={setBestScore}
           onBackToMenu={handleBackToMenu}
+          onCriticalTimeChange={handleCriticalTimeChange}
           fetchHighestScore={fetchHighestScore}
         />
       )}

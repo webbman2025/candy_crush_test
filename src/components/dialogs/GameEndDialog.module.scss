@@ -55,7 +55,7 @@
 .titleImage {
   position: relative;
   width: clamp(0px, calc(360 / 390 * 100vw), calc(360 / 390 * 600px));
-  margin-bottom: clamp(0px, calc(36 / 390 * 100vw), calc(36 / 390 * 600px));
+  //margin-bottom: clamp(0px, calc(36 / 390 * 100vw), calc(36 / 390 * 600px));
 }
 
 .resultContainer {
@@ -106,6 +106,16 @@
   & + .button {
     margin-top: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
   }
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.randomPrizeButton {
+  width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
+  margin-bottom: clamp(0px, calc(36 / 390 * 100vw), calc(36 / 390 * 600px));
 
   img {
     width: 100%;
