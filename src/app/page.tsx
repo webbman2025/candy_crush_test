@@ -52,23 +52,16 @@ export default function Home() {
           (window as any).webkitAudioContext)();
 
         // Create gain node for volume control
-
-        let tempBackgroundSound = sounds.background;
-        if (page == "game") {
-          tempBackgroundSound = sounds.gameBackground;
-        }
         gainNodeRef.current = audioContextRef.current.createGain();
-        gainNodeRef.current.gain.value = tempBackgroundSound.volume;
+        gainNodeRef.current.gain.value = sounds.background.volume;
         gainNodeRef.current.connect(audioContextRef.current.destination);
 
         // Load and decode audio file
-        const response = await fetch(tempBackgroundSound.path);
+        const response = await fetch(sounds.background.path);
         const arrayBuffer = await response.arrayBuffer();
         audioBufferRef.current = await audioContextRef.current.decodeAudioData(
           arrayBuffer
         );
-
-        controlAudio();
       } catch (error) {
         console.warn("Failed to initialize audio:", error);
       }
@@ -86,7 +79,7 @@ export default function Home() {
         audioContextRef.current.close();
       }
     };
-  }, [page]);
+  }, []);
 
   // Disable mobile browser zoom
   useEffect(() => {
@@ -215,7 +208,7 @@ export default function Home() {
   };
 
   // Handle audio playback based on audioOn state
-  const controlAudio = () => {
+  useEffect(() => {
     if (audioOn && audioBufferRef.current) {
       shouldBePlayingRef.current = true;
       playAudio(isCriticalTime ? 2 : 1);
@@ -223,10 +216,6 @@ export default function Home() {
       shouldBePlayingRef.current = false;
       pauseAudio();
     }
-  }
-
-  useEffect(() => {
-    controlAudio();
   }, [audioOn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle playback rate changes when critical time state changes

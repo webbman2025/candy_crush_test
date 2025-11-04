@@ -77,13 +77,7 @@ export const gameConfig = {
     // Background music
     background: {
       path: `${basePath}/sounds/background.mp3`,
-      volume: 0.4,
-    },
-
-    // Background music
-    gameBackground: {
-      path: `${basePath}/sounds/game-background.mp3`,
-      volume: 0.7,
+      volume: 0.5,
     },
 
     // Game effect sounds
@@ -137,12 +131,18 @@ export const gameConfig = {
   assets: {
     // Game item variants
     items: [
-      `${basePath}/images/items-pumpkin.png`,
-      `${basePath}/images/items-ghost.png`,
-      `${basePath}/images/items-empiremouth.png`,
-      `${basePath}/images/items-mushroom.png`,
-      `${basePath}/images/items-poison.png`,
-      `${basePath}/images/items-black-candy.png`,
+      `${basePath}/images/items-airplane.png`,
+      `${basePath}/images/items-air-ballon.png`,
+      `${basePath}/images/items-candy-green.png`,
+      `${basePath}/images/items-candy-pink.png`,
+      `${basePath}/images/items-luggage.png`,
+      `${basePath}/images/items-star.png`,
+      // `${basePath}/images/items-pumpkin.png`,
+      // `${basePath}/images/items-ghost.png`,
+      // `${basePath}/images/items-empiremouth.png`,
+      // `${basePath}/images/items-mushroom.png`,
+      // `${basePath}/images/items-poison.png`,
+      // `${basePath}/images/items-black-candy.png`,
       // `${basePath}/images/items-starfish.png`,
       // `${basePath}/images/items-palm-tree.png`,
       // `${basePath}/images/items-hat.png`,

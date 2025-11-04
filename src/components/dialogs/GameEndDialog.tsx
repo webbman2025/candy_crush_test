@@ -16,7 +16,6 @@ interface GameEndDialogProps {
   onBackToMenu: () => void;
   onRestartGame: () => void;
   onLeaderboard: () => void;
-  redirectToRandomPrize: () => void;
 }
 
 const GameEndDialog: React.FC<GameEndDialogProps> = ({
@@ -29,7 +28,6 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
   onBackToMenu,
   onRestartGame,
   onLeaderboard,
-  redirectToRandomPrize
 }) => {
   const [persistedState, setPersistedState] = useState<{
     score: number;
@@ -40,8 +38,6 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
     bestScore,
     gamePoint,
   });
-
-  const [isGetRandomPrize, setIsGetRandomPrize] = useState(false); // display random prize
 
   useEffect(() => {
     if (open) {
@@ -75,37 +71,7 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
         }
       };
 
-      // get Random Prize to API when game ends
-      const getRandomPrize = async () => {
-        try {
-          const response = await axios.post(
-            "/3Care/GamifyRandomPrize.do",
-            {
-              campaignID: "gamehub",
-              name: "candy-crush",
-              point: gamePoint,
-              score: score,
-            },
-            {
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-              }
-            }
-          );
-          if (response.data && response.data.code === 200) {
-            setIsGetRandomPrize(true);
-            console.log("Score submitted successfully:", response.data);
-          } else {
-            console.warn("API returned non-success code:", response.data);
-          }
-        } catch (error) {
-          console.error("Error submitting score:", error);
-        }
-      };
-
       submitScore();
-
-      getRandomPrize();
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -141,15 +107,6 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
         className={styles.titleImage}
         alt="Game over title"
       />
-
-      {isGetRandomPrize ? (
-        <button type="button" className={styles.randomPrizeButton} onClick={redirectToRandomPrize}>
-          <AppImage 
-            src={gameConfig.assets.ui.randomPrizeButton} 
-            alt="Random Prize button" 
-          />
-        </button>
-      ) : (null)}
 
       <div className={styles.resultContainer}>
         <div>

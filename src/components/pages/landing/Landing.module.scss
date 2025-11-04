@@ -27,6 +27,7 @@
   left: 0;
   width: 100%;
   height: auto;
+  animation: animePulse 2s infinite ease-in-out;
 }
 
 @keyframes animePulse {
@@ -43,7 +44,7 @@
 
 .playButton {
   position: absolute;
-  top: clamp(0px, calc(440 / 390 * 100vw), calc(440 / 390 * 600px));
+  top: clamp(0px, calc(333 / 390 * 100vw), calc(333 / 390 * 600px));
   left: 50%;
   width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
   transform: translateX(-50%);
@@ -56,7 +57,7 @@
 
 .instructionsButton {
   position: absolute;
-  top: clamp(0px, calc(520 / 390 * 100vw), calc(520 / 390 * 600px));
+  top: clamp(0px, calc(413 / 390 * 100vw), calc(413 / 390 * 600px));
   left: 50%;
   width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
   transform: translateX(-50%);
@@ -69,7 +70,7 @@
 
 .leaderboardButton {
   position: absolute;
-  top: clamp(0px, calc(600 / 390 * 100vw), calc(600 / 390 * 600px));
+  top: clamp(0px, calc(491 / 390 * 100vw), calc(491 / 390 * 600px));
   left: 50%;
   width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
   transform: translateX(-50%);

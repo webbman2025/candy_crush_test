@@ -25,7 +25,7 @@ const Landing: React.FC<LandingProps> = ({
         alt="Landing background"
       />
 
-      {/* <AppImage
+      <AppImage
         src={gameConfig.assets.ui.landingBackgroundCloud1}
         className={styles.cloud1Image}
         alt="Landing Cloud 1"
@@ -47,7 +47,7 @@ const Landing: React.FC<LandingProps> = ({
         src={gameConfig.assets.ui.landingBackgroundPlane}
         className={styles.planeImage}
         alt="Landing Plane"
-      /> */}
+      />
 
       <button
         type="button"
