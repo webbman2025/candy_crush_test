@@ -10,13 +10,13 @@
       background-color: transparent;
       border-radius: 0;
       box-shadow: none;
-      max-width: clamp(0px, calc(330 / 390 * 100vw), calc(330 / 390 * 600px));
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: unset !important;
-      min-height: unset !important;
+      //max-width: clamp(0px, calc(330 / 390 * 100vw), calc(330 / 390 * 600px));
+      //display: flex;
+      //flex-direction: column;
+      //align-items: center;
+      //justify-content: center;
+      //height: unset !important;
+      //min-height: unset !important;
     }
   }
 }
@@ -24,6 +24,7 @@
 .titleImage {
   position: relative;
   width: clamp(0px, calc(293 / 390 * 100vw), calc(293 / 390 * 600px));
+  margin: auto;
 }
 
 .contentContainer {
@@ -35,13 +36,14 @@
   // border-radius: clamp(0px, calc(40 / 390 * 100vw), calc(40 / 390 * 600px));
   border-radius: 40px;
   background-color: rgba(255, 255, 255, 0.9);
+  min-height: clamp(300px, calc(300 / 390 * 100vw), calc(300 / 390 * 600px))
 }
 
 .animationContainer {
   img {
     width: 100%;
     height: auto;
-    margin-bottom: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+    margin-bottom: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
     margin-top: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
   }
 }
@@ -54,11 +56,16 @@
   ) !important;
 }
 
+.brownText {
+  color: #8A3B01;
+}
+
 .playButton {
-  margin-top: clamp(0px, calc(55 / 390 * 100vw), calc(55 / 390 * 600px));
-  margin-bottom: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
+  position: relative;
+  margin-top: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
   width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
-  animation: animePulse 2s infinite ease-in-out;
+  left: 50%;
+  transform: translateX(-50%);
 
   img {
     width: 100%;
@@ -76,4 +83,34 @@
   100% {
     transform: scale(1);
   }
+}
+
+.titleText {
+  font-size: clamp(
+    0px,
+    calc(20 / 390 * 100vw),
+    calc(20 / 390 * 600px)
+  ) !important;
+  font-weight: 700 !important;
+}
+
+.instructionsGiftNumSample {
+  width: 60%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.instructionSwiperPagination{
+  text-align: center;
+  margin-top: 0.5em;
+  span {
+    background-color: #9A9A9A;
+    opacity: 1;
+  }
+}
+
+.instructionSwiperPaginationBulletActive {
+  background-color: #CEA272 !important;
+  width: 15px;
+  border-radius: 20px;
 }

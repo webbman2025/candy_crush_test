@@ -1,7 +1,9 @@
 import GameEndDialog from "@components/dialogs/GameEndDialog";
 import GamePauseDialog from "@components/dialogs/GamePauseDialog";
+import GameCheckInEndDialog from "@/components/dialogs/GameCheckInEndDialog";
 import { Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import axios from "axios";
 import { formatNumberWithCommas } from "@utils/index";
 import useSound from "@hooks/useSound";
 import Board from "./Board";
@@ -20,6 +22,10 @@ interface GameProps {
   gamePointBase: number;
   gamePointHighest: number;
   bestScore: number;
+  continuousCheckinCount: number;
+  specialItemPoint: number;
+  tempSpecialItemPoint: number;
+  checkInToday: boolean;
   items: string[];
   pointsPerItem: number;
   bonusPointsPerExtraMatch: number;
@@ -40,7 +46,11 @@ interface GameProps {
   setBestScore: (bestScore: number) => void;
   onBackToMenu: () => void;
   onCriticalTimeChange?: (isCritical: boolean) => void;
-  fetchHighestScore: () => void;
+  fetchUserInfoScore: () => void;
+  setSpecialItemPoint: (specialItemPoint: number) => void;
+  setContinuousCheckinCount?: (count: number) => void;
+  setCheckInToday?: (checkInToday: boolean) => void;
+  setTempSpecialItemPoint?: (count: number) => void;
 }
 
 const Game: React.FC<GameProps> = ({
@@ -52,6 +62,10 @@ const Game: React.FC<GameProps> = ({
   //gamePointBase = 25,
   //gamePointHighest = 50,
   bestScore = 0,
+  continuousCheckinCount = 0,
+  specialItemPoint = 0,
+  tempSpecialItemPoint=0,
+  checkInToday = false,
   items = [],
   pointsPerItem = 10,
   bonusPointsPerExtraMatch = 20,
@@ -62,7 +76,11 @@ const Game: React.FC<GameProps> = ({
   setBestScore,
   onBackToMenu,
   onCriticalTimeChange,
-  fetchHighestScore,
+  fetchUserInfoScore,
+  setSpecialItemPoint,
+  setContinuousCheckinCount,
+  setCheckInToday,
+  setTempSpecialItemPoint,
 }) => {
   const lastResumeTimeRef = useRef<number>(Date.now());
   const accumulatedTimeRef = useRef<number>(0);
@@ -78,10 +96,12 @@ const Game: React.FC<GameProps> = ({
     timeLeft: timeLimit * 1000, // in ms
     isGameOver: false,
     isPaused: false,
+    specialItemMatchNum: 0
   });
 
   const [openPauseDialog, setOpenPauseDialog] = useState(false);
   const [openEndDialog, setOpenEndDialog] = useState(false);
+  const [openCheckInEndDialog, setOpenCheckInEndDialog] = useState(false);
 
   const audioOnRef = useRef(audioOn);
 
@@ -183,15 +203,99 @@ const Game: React.FC<GameProps> = ({
       if (gameState.score > bestScore) {
         setBestScore(gameState.score);
       }
-      setOpenEndDialog(true);
     }
   }, [
     gameState.isGameOver,
     gameState.score,
     bestScore,
     setBestScore,
-    gameOverSound,
+    gameOverSound
   ]);
+
+  //handle when game is over
+  useEffect(() => {
+    if (gameState.isGameOver) {
+      setSpecialItemPoint(specialItemPoint + gameState.specialItemMatchNum);
+      submitScore();
+
+      if (checkInToday) {
+        setOpenEndDialog(true);
+      } else {
+        setContinuousCheckinCount?.(continuousCheckinCount + 1);
+        setCheckInToday?.(true);
+        dailyCheckIn();
+        setOpenCheckInEndDialog(true);
+      }
+    }
+  }, [
+    gameState.isGameOver,
+  ]);
+
+  // Submit score to API when game ends
+  const submitScore = async () => {
+    try {
+      const response = await axios.post(
+        "/3Care/GamifyAcquirePoint.do",
+        {
+          campaignID: "gamehub",
+          name: "candy-crush",
+          action: "game",
+          point: 0,
+          score: gameState.score,
+          specialItemMatchNum: gameState.specialItemMatchNum,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          }
+        }
+      );
+      if (response.data && response.data.code === 200) {
+        console.log("Score submitted successfully:", response.data);
+      } else {
+        console.warn("API returned non-success code:", response.data);
+      }
+    } catch (error) {
+      console.error("Error submitting score:", error);
+    }
+  };
+
+  // Check In to API when game ends
+  const dailyCheckIn = async () => {
+    try {
+      const response = await axios.post(
+        "/3Care/GamifyDailyCheckin.do",
+        {
+          campaignID: "gamehub",
+          action: "checkin",
+          lang: "eng",
+        },
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+          }
+        }
+      );
+      if (response.data && response.data.code === 200) {
+        console.log("Daily Check In submitted successfully:", response.data);
+        console.log("continuousCheckinCount",continuousCheckinCount);
+
+        if (continuousCheckinCount >= 2) {
+          console.log("add 30 points");
+          setGameState((prev: GameState) => ({
+            ...prev,
+            specialItemMatchNum: prev.specialItemMatchNum + 30,
+            // timeLeft will be updated by the timer with bonus included
+          }));
+          setSpecialItemPoint(specialItemPoint + 30 + gameState.specialItemMatchNum);
+        }
+      } else {
+        console.warn("API returned non-success code:", response.data);
+      }
+    } catch (error) {
+      console.error("Error submitting score:", error);
+    }
+  };
 
   const handleMatchScore = (matchedCount: number) => {
     const basePoints = matchedCount * pointsPerItem;
@@ -291,8 +395,7 @@ const Game: React.FC<GameProps> = ({
     bonusTimeRef.current = 0; // Reset bonus time
     comboCountRef.current = 0;
     highestComboRef.current = 1;
-    fetchHighestScore(); // Fetch highest score from server
-    fetchHighestScore(); // Fetch highest score from server
+    fetchUserInfoScore(); // Fetch highest score from server
     setComboPopup(null);
     setComboPopupFading(false);
     setIsCriticalTime(false); // Reset critical time state
@@ -302,6 +405,7 @@ const Game: React.FC<GameProps> = ({
       timeLeft: timeLimit * 1000,
       isGameOver: false,
       isPaused: false,
+      specialItemMatchNum: 0
     });
 
     setOpenPauseDialog(false);
@@ -358,6 +462,21 @@ const Game: React.FC<GameProps> = ({
 
   const handleLeaderBoard = () => {
     router.push("/leaderboard.jsp?req_d=my3");
+  };
+
+  const handleSpecialItemMatch = (count: number) => {
+    console.log(`Special item matched ${count} times`);
+    setGameState((prev: GameState) => ({
+      ...prev,
+      specialItemMatchNum: prev.specialItemMatchNum + count,
+      // timeLeft will be updated by the timer with bonus included
+    }));
+    setTempSpecialItemPoint?.(tempSpecialItemPoint + count);
+  };
+
+  const onNextEndDialog = () => {
+    setOpenCheckInEndDialog(false);
+    setOpenEndDialog(true);
   };
 
   return (
@@ -430,6 +549,7 @@ const Game: React.FC<GameProps> = ({
               items={items}
               disabled={gameState.isGameOver}
               key={gameKey}
+              onSpecialItemMatch={handleSpecialItemMatch}
             />
 
             {/* Combo Popup */}
@@ -506,6 +626,25 @@ const Game: React.FC<GameProps> = ({
             />
           </div>
         </div>
+
+        <div className={styles.gameBottomGiftNumBar}>
+          <AppImage
+            src={gameConfig.assets.ui.gameBottomGiftNumBar}
+            className={styles.gameBottomGiftNumBarImage}
+            alt="Time bar background"
+          />
+
+          <div className={styles.gameGiftNumberContainer}>
+            <AppImage
+              src={gameConfig.assets.ui.giftBoxIcon}
+              alt="Landing round gift box"
+              className={styles.giftBoxIcon}
+            />
+            <Typography className={styles.giftNumText}>
+              {formatNumberWithCommas(tempSpecialItemPoint)}
+            </Typography>
+          </div>
+        </div>
       </div>
 
       <GamePauseDialog
@@ -517,10 +656,18 @@ const Game: React.FC<GameProps> = ({
         onBackToMenu={onBackToMenu}
       />
 
+      <GameCheckInEndDialog
+        open={openCheckInEndDialog}
+        continuousCheckinCount={continuousCheckinCount}
+        onNextEndDialog={onNextEndDialog}
+      />
+
       <GameEndDialog
         open={openEndDialog}
         audioOn={audioOn}
         score={gameState.score}
+        specialItemMatchNum={gameState.specialItemMatchNum}
+        specialItemTotalNum={specialItemPoint}
         bestScore={bestScore}
         // gamePoint={calculateGamePoints(gameState.score)}
         gamePoint={0}

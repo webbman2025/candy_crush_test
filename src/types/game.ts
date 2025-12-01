@@ -8,4 +8,5 @@ export interface GameState {
   timeLeft: number;
   isGameOver: boolean;
   isPaused: boolean;
+  specialItemMatchNum: number;
 }

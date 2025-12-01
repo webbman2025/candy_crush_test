@@ -30,6 +30,11 @@ export default function Home() {
   const [bestScore, setBestScore] = useState(0);
   const [openInstructionsDialog, setOpenInstructionsDialog] = useState(false);
   const [isCriticalTime, setIsCriticalTime] = useState(false);
+  const [continuousCheckinCount, setContinuousCheckinCount] = useState(0);
+  const [specialItemPoint, setSpecialItemPoint] = useState(0);
+  const [checkInToday, setCheckInToday] = useState(false);
+  const [tempSpecialItemPoint, setTempSpecialItemPoint] = useState(specialItemPoint); // Key to force board remount on restart
+
 
   // Audio Context setup with useRef to persist across renders
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -43,6 +48,23 @@ export default function Home() {
   const isRedirectedToPlay = useRef<boolean>(false);
   
 
+  window.onload = () => {
+    document.addEventListener('touchstart', (event) => {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    });
+    
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (event) => {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+  }
+
   // Initialize AudioContext and load audio
   useEffect(() => {
     const initAudio = async () => {
@@ -52,16 +74,22 @@ export default function Home() {
           (window as any).webkitAudioContext)();
 
         // Create gain node for volume control
+        let tempBackgroundSound = sounds.background;
+        if (page == "game") {
+          tempBackgroundSound = sounds.background;
+        }
         gainNodeRef.current = audioContextRef.current.createGain();
-        gainNodeRef.current.gain.value = sounds.background.volume;
+        gainNodeRef.current.gain.value = tempBackgroundSound.volume;
         gainNodeRef.current.connect(audioContextRef.current.destination);
 
         // Load and decode audio file
-        const response = await fetch(sounds.background.path);
+        const response = await fetch(tempBackgroundSound.path);
         const arrayBuffer = await response.arrayBuffer();
         audioBufferRef.current = await audioContextRef.current.decodeAudioData(
           arrayBuffer
         );
+
+        controlAudio();
       } catch (error) {
         console.warn("Failed to initialize audio:", error);
       }
@@ -79,7 +107,7 @@ export default function Home() {
         audioContextRef.current.close();
       }
     };
-  }, []);
+  }, [page]);
 
   // Disable mobile browser zoom
   useEffect(() => {
@@ -208,7 +236,7 @@ export default function Home() {
   };
 
   // Handle audio playback based on audioOn state
-  useEffect(() => {
+  const controlAudio = () => {
     if (audioOn && audioBufferRef.current) {
       shouldBePlayingRef.current = true;
       playAudio(isCriticalTime ? 2 : 1);
@@ -216,6 +244,10 @@ export default function Home() {
       shouldBePlayingRef.current = false;
       pauseAudio();
     }
+  }; // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    controlAudio();
   }, [audioOn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle playback rate changes when critical time state changes
@@ -351,10 +383,10 @@ export default function Home() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch user's highest score from API on component mount
-  const fetchHighestScore = async () => {
+  const fetchUserInfoScore = async () => {
     try {
       const response = await axios.get(
-        "/3Care/GamifyUserHighestScore.do",
+        "/3Care/GamifyCandyCrushUserInfo.do",
         {
           params: {
             campaignID: "gamehub",
@@ -364,6 +396,11 @@ export default function Home() {
       );
       if (response.data && response.data.code === 200) {
         setBestScore(response.data.score || 0);
+        setContinuousCheckinCount(response.data.continuousCheckinCount || 0);
+        setSpecialItemPoint(response.data.specialItemPoint || 0);
+        setTempSpecialItemPoint(response.data.specialItemPoint || 0);
+        setCheckInToday(response.data.checkInToday);
+        console.log("checkInToday:", response.data.checkInToday == "true");
       } else {
         console.warn("API returned non-success code:", response.data);
         window.location.reload(); // Reload page if API fails
@@ -375,7 +412,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchHighestScore();
+    fetchUserInfoScore();
   }, []);
 
   // Directly play game
@@ -388,11 +425,7 @@ export default function Home() {
   });
 
   const handlePlay = () => {
-    if (bestScore === 0) {
-      setOpenInstructionsDialog(true);
-    } else {
-      setPage("game");
-    }
+    setPage("game");
   };
 
   const handlePlayFromTutorial = () => {
@@ -413,6 +446,10 @@ export default function Home() {
   const handleLeaderBoard = () => {
     router.push("/leaderboard.jsp?req_d=my3");
   };
+
+  const handleEventDetails = () => {
+    router.push("/eventDetails.jsp?req_d=my3");
+  };
   
   const handleCriticalTimeChange = (isCritical: boolean) => {
     setIsCriticalTime(isCritical);
@@ -423,10 +460,13 @@ export default function Home() {
       {page === "landing" && (
         <Landing
           audioOn={audioOn}
+          continuousCheckinCount={continuousCheckinCount}
+          specialItemPoint={specialItemPoint}
           setAudioOn={setAudioOn}
           onPlay={handlePlay}
           onInstructions={() => setOpenInstructionsDialog(true)}
           onLeaderBoard={handleLeaderBoard}
+          onEventDetails={handleEventDetails}
         />
       )}
       {page === "game" && (
@@ -440,6 +480,10 @@ export default function Home() {
           gamePointHighest={gamePointHighest}
           items={items}
           bestScore={bestScore}
+          continuousCheckinCount={continuousCheckinCount}
+          specialItemPoint={specialItemPoint}
+          tempSpecialItemPoint={tempSpecialItemPoint}
+          checkInToday={checkInToday}
           pointsPerItem={pointsPerItem}
           bonusPointsPerExtraMatch={bonusPointsPerExtraMatch}
           comboMultipliers={comboMultipliers}
@@ -449,7 +493,11 @@ export default function Home() {
           setBestScore={setBestScore}
           onBackToMenu={handleBackToMenu}
           onCriticalTimeChange={handleCriticalTimeChange}
-          fetchHighestScore={fetchHighestScore}
+          fetchUserInfoScore={fetchUserInfoScore}
+          setSpecialItemPoint={setSpecialItemPoint}
+          setContinuousCheckinCount={setContinuousCheckinCount}
+          setCheckInToday={setCheckInToday}
+          setTempSpecialItemPoint={setTempSpecialItemPoint}
         />
       )}
 

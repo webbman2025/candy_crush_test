@@ -131,19 +131,20 @@ export const gameConfig = {
   assets: {
     // Game item variants
     items: [
-      `${basePath}/images/items-airplane.png`,
-      `${basePath}/images/items-air-ballon.png`,
-      `${basePath}/images/items-candy-green.png`,
-      `${basePath}/images/items-candy-pink.png`,
-      `${basePath}/images/items-luggage.png`,
-      `${basePath}/images/items-star.png`,
-      // `${basePath}/images/items-pumpkin.png`,
-      // `${basePath}/images/items-ghost.png`,
-      // `${basePath}/images/items-empiremouth.png`,
-      // `${basePath}/images/items-mushroom.png`,
-      // `${basePath}/images/items-poison.png`,
-      // `${basePath}/images/items-black-candy.png`,
-      // `${basePath}/images/items-starfish.png`,
+      `${basePath}/images/xmas-giftbox.png`,
+      `${basePath}/images/items-xmas-1.png`,
+      `${basePath}/images/items-xmas-2.png`,
+      `${basePath}/images/items-xmas-3.png`,
+      `${basePath}/images/items-xmas-4.png`,
+      `${basePath}/images/items-xmas-5.png`,
+      `${basePath}/images/items-xmas-6.png`,
+      //`${basePath}/images/items-pumpkin.png`,
+      //`${basePath}/images/items-ghost.png`,
+      //`${basePath}/images/items-empiremouth.png`,
+      //`${basePath}/images/items-mushroom.png`,
+      //`${basePath}/images/items-poison.png`,
+      //`${basePath}/images/items-black-candy.png`,
+      //`${basePath}/images/items-starfish.png`,
       // `${basePath}/images/items-palm-tree.png`,
       // `${basePath}/images/items-hat.png`,
     ],
@@ -173,6 +174,14 @@ export const gameConfig = {
       landingBackgroundCloud3: `${basePath}/images/travel-bg-cloud-3.png`,
       landingBackgroundPlane: `${basePath}/images/travel-bg-plane.png`,
       landingTitle: `${basePath}/images/landing-title.png`,
+      landingEventDetails: `${basePath}/images/landing-event-details.png`,
+      landingRoundGiftBox: `${basePath}/images/landing-round-gift-box.png`,
+      landingUserGameInfoBox: {
+        day0:  `${basePath}/images/landing-user-game-info-box-day-0.png`,
+        day1:  `${basePath}/images/landing-user-game-info-box-day-1.png`,
+        day2:  `${basePath}/images/landing-user-game-info-box-day-2.png`,
+        day3:  `${basePath}/images/landing-user-game-info-box-day-3.png`,
+      },
 
       // Buttons
       audioOnButton: `${basePath}/images/audio-on-button.png`,
@@ -187,6 +196,8 @@ export const gameConfig = {
       restartGameButton: `${basePath}/images/restart-game-button.png`,
       backToMenuButton: `${basePath}/images/back-to-menu-button.png`,
       randomPrizeButton: `${basePath}/images/random-prize-btn.png`,
+      coomingSoonButton: `${basePath}/images/coming-soon-button.png`,
+      okButton: `${basePath}/images/ok-button.png`,
 
       // Dialog titles
       gameOverTitle: `${basePath}/images/game-over-title.png`,
@@ -199,6 +210,19 @@ export const gameConfig = {
       gamePoints: `${basePath}/images/game-points.png`,
       instructionsAnimation: `${basePath}/images/instructions-animation.gif`,
       instructionsTimeBar: `${basePath}/images/instructions-time-bar.png`,
+      instructionsGiftNumSample: `${basePath}/images/instructions-gift-num-sample.png`,
+      
+      checkInDialogCheckInBox: {
+        day1:  `${basePath}/images/check-in-box-day-1.png`,
+        day2:  `${basePath}/images/check-in-box-day-2.png`,
+        day3:  `${basePath}/images/check-in-box-day-3.png`,
+      },
+
+      giftBoxIcon: `${basePath}/images/xmas-giftbox.png`,
+
+      gameBottomGiftNumBar: `${basePath}/images/game-bottom-gift-num-bar.png`,
+
+      endDialogGiftBoxBg: `${basePath}/images/end-dialog-gift-box-bg.png`,
     },
   },
 };

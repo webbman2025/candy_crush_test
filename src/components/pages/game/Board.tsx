@@ -14,6 +14,7 @@ interface BoardProps {
   onResetCombo: () => void;
   items: string[];
   disabled?: boolean;
+  onSpecialItemMatch?: (count: number) => void;
 }
 
 const Board: React.FC<BoardProps> = ({
@@ -24,6 +25,7 @@ const Board: React.FC<BoardProps> = ({
   onResetCombo,
   items,
   disabled = false,
+  onSpecialItemMatch,
 }) => {
   const [board, setBoard] = useState<Item[][]>([]);
   const [dragStart, setDragStart] = useState<{
@@ -52,6 +54,8 @@ const Board: React.FC<BoardProps> = ({
   });
   // const invalidSound = useSound("/sounds/invalid.mp3", { volume: 0.4 });
 
+  const specialItemType = 1; // Assuming type 1 is the special item
+
   // Initialize the board with random items
   const initializeBoard = () => {
     const newBoard: Item[][] = [];
@@ -76,7 +80,7 @@ const Board: React.FC<BoardProps> = ({
         const maxAttempts = 100; // Prevent infinite loops
 
         while (!validType && attempts < maxAttempts) {
-          const randomType = Math.floor(Math.random() * items.length) + 1;
+          const randomType = getRandomItemType();
           newBoard[row][col].type = randomType;
 
           // Check if this placement creates a match
@@ -287,10 +291,21 @@ const Board: React.FC<BoardProps> = ({
 
     const newBoard = [...board];
 
+    // Count special items (type === 1) in matches
+    let specialItemCount = 0;
+
     // Mark matched items
     matches.forEach(({ row, col }) => {
       newBoard[row][col] = { ...newBoard[row][col], isMatched: true };
+      if (board[row][col].type === specialItemType) {
+        specialItemCount++;
+      }
     });
+
+    // Call parent callback if there are special items matched
+    if (specialItemCount > 0 && onSpecialItemMatch) {
+      onSpecialItemMatch(specialItemCount);
+    }
 
     setBoard(newBoard);
     onMatch(matches.length);
@@ -482,7 +497,7 @@ const Board: React.FC<BoardProps> = ({
           // Move this item down by the number of empty spaces
           newBoard[row + emptySpaces][col] = { ...newBoard[row][col] };
           newBoard[row][col] = {
-            type: Math.floor(Math.random() * items.length) + 1,
+            type: getRandomItemType(),
             isMatched: false,
           };
         }
@@ -491,7 +506,7 @@ const Board: React.FC<BoardProps> = ({
       // Fill top rows with new items
       for (let row = 0; row < emptySpaces; row++) {
         newBoard[row][col] = {
-          type: Math.floor(Math.random() * items.length) + 1,
+          type: getRandomItemType(),
           isMatched: false,
         };
       }
@@ -897,6 +912,19 @@ const Board: React.FC<BoardProps> = ({
   // Helper function to get image for item type
   const getItemImage = (type: number): string => {
     return items[type - 1] || items[0]; // Use items array, fallback to first item
+  };
+
+  const getRandomItemType = (): number => {
+    const specialItemChance = Math.floor(Math.random() * items.length * 3) === 0; // special item with 1/3 chance compared to others
+    if (specialItemChance) {
+      return specialItemType; // Return special item type
+    } else {
+      let itemType = Math.floor(Math.random() * items.length) + 1; // Random type from 1 to items.length
+      if (itemType === specialItemType) {
+        itemType = getRandomItemType(); // Ensure we don't return special item type
+      }
+      return itemType;
+    }
   };
 
   let cellSize = (390 - 12 - 12 - (width - 1) * 2) / width;

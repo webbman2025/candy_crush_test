@@ -62,7 +62,7 @@
   width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
 
   & + .button {
-    margin-top: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+    margin-top: clamp(0px, calc(5 / 390 * 100vw), calc(5 / 390 * 600px));
   }
 
   img {

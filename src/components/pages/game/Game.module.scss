@@ -9,6 +9,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background-color: #0E2414;
 }
 
 .gameContainer {
@@ -66,7 +67,7 @@
 
 .boardWrapper {
   position: relative;
-  margin-top: clamp(0px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
+  margin-top: clamp(0px, calc(0 / 390 * 100vw), calc(0 / 390 * 600px));
 }
 
 .gameOver {
@@ -122,8 +123,8 @@
 
 .timeBarContainer {
   position: relative;
-  margin-top: clamp(0px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
-  width: clamp(0px, calc(368 / 390 * 100vw), calc(368 / 390 * 600px));
+  margin-top: clamp(2px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px));
+  width: clamp(0px, calc(380 / 390 * 100vw), calc(380 / 390 * 600px));
 }
 
 .timeBarBackgroundImage {
@@ -133,9 +134,9 @@
 
 .timeBarProgressContainer {
   position: absolute;
-  top: clamp(0px, calc(8 / 390 * 100vw), calc(8 / 390 * 600px));
-  left: clamp(0px, calc(8 / 390 * 100vw), calc(8 / 390 * 600px));
-  width: clamp(0px, calc(352 / 390 * 100vw), calc(352 / 390 * 600px));
+  top: clamp(0px, calc(16 / 390 * 100vw), calc(16 / 390 * 600px));
+  left: clamp(0px, calc(16 / 390 * 100vw), calc(16 / 390 * 600px));
+  width: clamp(0px, calc(344 / 390 * 100vw), calc(344 / 390 * 600px));
 }
 
 .timeBarProgressImage {
@@ -175,6 +176,45 @@
   height: auto;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
+
+.gameBottomGiftNumBar {
+  position: relative;
+  margin-top: clamp(2px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px));
+  width: clamp(0px, calc(380 / 390 * 100vw), calc(380 / 390 * 600px));
+
+  .gameGiftNumberContainer {
+    position: absolute;
+    right: clamp(0px, calc(45 / 390 * 100vw), calc(45 / 390 * 600px));
+    top: clamp(0px, calc(18 / 390 * 100vw), calc(18 / 390 * 600px));
+    width: clamp(0px, calc(115 / 390 * 100vw), calc(115 / 390 * 600px));
+    height: clamp(0px, calc(30 / 390 * 100vw), calc(30 / 390 * 600px));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .giftBoxIcon {
+      height: 80%;
+      width: auto;
+      margin-right: 0.5em;
+    }
+
+    .giftNumText {
+      font-family: var(--font-montserrat) !important;
+      font-weight: 700 !important;
+      font-size: clamp(
+        0px,
+        calc(20 / 390 * 100vw),
+        calc(20 / 390 * 600px)
+      ) !important;
+      color: white;
+    }
+  }
+}
+
+.gameBottomGiftNumBarImage {
+  width: 100%;
+}
+
 
 @keyframes comboPopupAnimation {
   0% {

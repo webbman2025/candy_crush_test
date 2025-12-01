@@ -2,7 +2,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #246b86;
+  background: linear-gradient(180deg, #0E2515 0%, #104929 100%);
+  border: clamp(3px, calc(3 / 390 * 100vw), calc(3 / 390 * 600px)) #55895D solid;
   border-radius: 10px;
   max-width: 100%;
   overflow: hidden;
@@ -15,12 +16,12 @@
 
 .verticalSeparator {
   width: clamp(0px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px));
-  background-color: #267b9a;
+  background: #55895D;
   flex-shrink: 0;
 }
 
 .horizontalSeparator {
   height: clamp(0px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px));
-  background-color: #267b9a;
+  background: #55895D;
   flex-shrink: 0;
 }

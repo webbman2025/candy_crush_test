@@ -54,24 +54,37 @@
 
 .titleImage {
   position: relative;
-  width: clamp(0px, calc(360 / 390 * 100vw), calc(360 / 390 * 600px));
-  margin-bottom: clamp(0px, calc(36 / 390 * 100vw), calc(36 / 390 * 600px));
+  width: clamp(0px, calc(117 / 390 * 100vw), calc(117 / 390 * 600px));
+  margin-bottom: clamp(0px, calc(0 / 390 * 100vw), calc(0 / 390 * 600px));
+}
+
+.titleText {
+  font-size: clamp(
+    0px,
+    calc(32 / 390 * 100vw),
+    calc(32 / 390 * 600px)
+  ) !important;
+  z-index: 2;
+  color: #CEA272;
+  font-weight: 700 !important;
+  text-align: center;
 }
 
 .resultContainer {
-  margin-bottom: clamp(0px, calc(36 / 390 * 100vw), calc(36 / 390 * 600px));
+  margin-top: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
+  margin-bottom: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
   color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
+  gap: clamp(0px, calc(40 / 390 * 100vw), calc(40 / 390 * 600px));
+  position: relative;
+  width: clamp(0px, calc(320 / 390 * 100vw), calc(320 / 390 * 600px));
 
   p {
     font-size: clamp(0px, calc(24 / 390 * 100vw), calc(24 / 390 * 600px));
     line-height: clamp(0px, calc(24 / 390 * 100vw), calc(24 / 390 * 600px));
-    font-weight: 700;
-    font-family: var(--font-montserrat);
     text-align: center;
 
     & + p {
@@ -121,4 +134,43 @@
     width: 100%;
     height: auto;
   }
+}
+
+.giftNumberContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
+
+  .giftBoxIcon {
+    width: clamp(0px, calc(42 / 390 * 100vw), calc(42 / 390 * 600px));
+    height: auto;
+    margin-right: 0.5em;
+  }
+
+  .giftNumText {
+    font-family: var(--font-montserrat) !important;
+    font-weight: 700 !important;
+    font-size: clamp(
+      32px,
+      calc(32 / 390 * 100vw),
+      calc(32 / 390 * 600px)
+    ) !important;
+    color: white;
+  }
+}
+
+
+.resultContainerBg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.infoTopContainer {
+  margin-top: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+}
+
+.infoBottomContainer {
+  margin-bottom: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
 }

@@ -1,6 +1,5 @@
 import { Dialog, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import styles from "./GameEndDialog.module.scss";
 import { formatNumberWithCommas } from "@utils/index";
 import AppImage from "@components/AppImage";
@@ -12,6 +11,8 @@ interface GameEndDialogProps {
   score: number;
   bestScore: number;
   gamePoint: number;
+  specialItemMatchNum: number;
+  specialItemTotalNum: number;
   setAudioOn: (audioOn: boolean) => void;
   onBackToMenu: () => void;
   onRestartGame: () => void;
@@ -24,6 +25,8 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
   score,
   bestScore,
   gamePoint,
+  specialItemMatchNum,
+  specialItemTotalNum,
   setAudioOn,
   onBackToMenu,
   onRestartGame,
@@ -39,41 +42,25 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
     gamePoint,
   });
 
+  const [tempTotalNum, setTempTotalNum ] = useState<number>(0);
+
   useEffect(() => {
     if (open) {
+      console.log("OPEN GameEndDialogProps");
+      console.log("specialItemMatchNum",specialItemMatchNum);
+      console.log("specialItemTotalNum",specialItemTotalNum);
       setPersistedState({ score, bestScore, gamePoint });
-
-      // Submit score to API when game ends
-      const submitScore = async () => {
-        try {
-          const response = await axios.post(
-            "/3Care/GamifyAcquirePoint.do",
-            {
-              campaignID: "gamehub",
-              name: "candy-crush",
-              action: "game",
-              point: gamePoint,
-              score: score,
-            },
-            {
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-              }
-            }
-          );
-          if (response.data && response.data.code === 200) {
-            console.log("Score submitted successfully:", response.data);
-          } else {
-            console.warn("API returned non-success code:", response.data);
-          }
-        } catch (error) {
-          console.error("Error submitting score:", error);
-        }
-      };
-
-      submitScore();
+      setTempTotalNum(specialItemTotalNum - specialItemMatchNum - 1);
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setTimeout(function() {
+      if (tempTotalNum < specialItemTotalNum) {
+        setTempTotalNum(tempTotalNum+1);
+      }
+    }, 1000/specialItemMatchNum+1);
+  }, [tempTotalNum]);
 
   return (
     <Dialog open={open} className={styles.root}>
@@ -103,24 +90,38 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
       </div>
 
       <AppImage
-        src={gameConfig.assets.ui.gameOverTitle}
+        src={gameConfig.assets.ui.giftBoxIcon}
         className={styles.titleImage}
         alt="Game over title"
       />
 
+      <Typography align="center" className={styles.titleText}>
+        Your Gift box {formatNumberWithCommas(tempTotalNum)}
+      </Typography>
+
       <div className={styles.resultContainer}>
-        <div>
-          <Typography>Your Score</Typography>
-          <Typography>
-            {formatNumberWithCommas(persistedState.score)}
-          </Typography>
+        <AppImage
+          src={gameConfig.assets.ui.endDialogGiftBoxBg}
+          className={styles.resultContainerBg}
+          alt="Game over title"
+        />
+        <div className={styles.infoTopContainer}>
+          <Typography>Get Gift box</Typography>
+          <div className={styles.giftNumberContainer}>
+            <AppImage
+              src={gameConfig.assets.ui.giftBoxIcon}
+              alt="Landing round gift box"
+              className={styles.giftBoxIcon}
+            />
+            <Typography className={styles.giftNumText}>
+              +{formatNumberWithCommas(specialItemMatchNum)}
+            </Typography>
+          </div>
         </div>
-        <div>
-          <Typography>Your Highest Score</Typography>
-          <Typography>
-            {formatNumberWithCommas(
-              Math.max(persistedState.score, persistedState.bestScore)
-            )}
+        <div className={styles.infoBottomContainer}>
+          <Typography>Your Score</Typography>
+          <Typography style={{fontWeight: 700}}>
+            {formatNumberWithCommas(persistedState.score)}
           </Typography>
         </div>
       </div>
@@ -129,13 +130,6 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
         <AppImage
           src={gameConfig.assets.ui.playAgainButton}
           alt="Play again button"
-        />
-      </button>
-
-      <button type="button" className={styles.button} onClick={onLeaderboard}>
-        <AppImage
-          src={gameConfig.assets.ui.leaderboardButton}
-          alt="Leaderboard button"
         />
       </button>
     </Dialog>
