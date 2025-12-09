@@ -915,16 +915,18 @@ const Board: React.FC<BoardProps> = ({
   };
 
   const getRandomItemType = (): number => {
-    const specialItemChance = Math.floor(Math.random() * items.length * 3) === 0; // special item with 1/3 chance compared to others
-    if (specialItemChance) {
-      return specialItemType; // Return special item type
-    } else {
-      let itemType = Math.floor(Math.random() * items.length) + 1; // Random type from 1 to items.length
-      if (itemType === specialItemType) {
-        itemType = getRandomItemType(); // Ensure we don't return special item type
-      }
-      return itemType;
-    }
+    // const specialItemChance = Math.floor(Math.random() * items.length) === 0; // modify special item appear chance
+    // if (specialItemChance) {
+    //   return specialItemType; // Return special item type
+    // } else {
+    //   let itemType = Math.floor(Math.random() * items.length) + 1; // Random type from 1 to items.length
+    //   if (itemType === specialItemType) {
+    //     itemType = getRandomItemType(); // Ensure we don't return special item type
+    //   }
+    //   return itemType;
+    // }
+
+    return Math.floor(Math.random() * items.length) + 1;
   };
 
   let cellSize = (390 - 12 - 12 - (width - 1) * 2) / width;

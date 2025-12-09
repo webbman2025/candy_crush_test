@@ -50,17 +50,17 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
       console.log("specialItemMatchNum",specialItemMatchNum);
       console.log("specialItemTotalNum",specialItemTotalNum);
       setPersistedState({ score, bestScore, gamePoint });
-      setTempTotalNum(specialItemTotalNum - specialItemMatchNum - 1);
+      setTempTotalNum(specialItemTotalNum);
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    setTimeout(function() {
-      if (tempTotalNum < specialItemTotalNum) {
-        setTempTotalNum(tempTotalNum+1);
-      }
-    }, 1000/specialItemMatchNum+1);
-  }, [tempTotalNum]);
+  // useEffect(() => {
+  //   setTimeout(function() {
+  //     if (tempTotalNum < specialItemTotalNum) {
+  //       setTempTotalNum(tempTotalNum+1);
+  //     }
+  //   }, 1000/specialItemMatchNum+1);
+  // }, [tempTotalNum]);
 
   return (
     <Dialog open={open} className={styles.root}>
