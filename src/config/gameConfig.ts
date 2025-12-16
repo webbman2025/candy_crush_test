@@ -198,6 +198,7 @@ export const gameConfig = {
       randomPrizeButton: `${basePath}/images/random-prize-btn.png`,
       coomingSoonButton: `${basePath}/images/coming-soon-button.png`,
       okButton: `${basePath}/images/ok-button.png`,
+      finishedButton: `${basePath}/images/finished-button.png`,
 
       // Dialog titles
       gameOverTitle: `${basePath}/images/game-over-title.png`,

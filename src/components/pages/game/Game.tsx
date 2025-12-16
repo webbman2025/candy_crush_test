@@ -465,6 +465,8 @@ const Game: React.FC<GameProps> = ({
   };
 
   const handleSpecialItemMatch = (count: number) => {
+    if (gameState.isGameOver) return;
+    
     console.log(`Special item matched ${count} times`);
     setGameState((prev: GameState) => ({
       ...prev,
@@ -549,7 +551,7 @@ const Game: React.FC<GameProps> = ({
               items={items}
               disabled={gameState.isGameOver}
               key={gameKey}
-              onSpecialItemMatch={handleSpecialItemMatch}
+              onSpecialItemMatch={gameState.isGameOver ? () => {} : handleSpecialItemMatch}
             />
 
             {/* Combo Popup */}

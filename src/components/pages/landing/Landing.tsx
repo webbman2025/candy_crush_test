@@ -93,8 +93,8 @@ const Landing: React.FC<LandingProps> = ({
             Round 1<br/>1-18 Dec
           </Typography>
 
-          <button type="button" className={styles.roundPlayButton} onClick={onPlay}>
-            <AppImage src={gameConfig.assets.ui.playButton} alt="Play button" />
+          <button type="button" className={styles.roundPlayButton}>
+            <AppImage src={gameConfig.assets.ui.finishedButton} alt="Play button" />
           </button>
         </div>
         
@@ -109,8 +109,8 @@ const Landing: React.FC<LandingProps> = ({
             Round 2<br/>19 Dec - 5 Jan
           </Typography>
 
-          <button type="button" className={styles.roundPlayButton}>
-            <AppImage src={gameConfig.assets.ui.coomingSoonButton} alt="Play button" />
+          <button type="button" className={styles.roundPlayButton} onClick={onPlay}>
+            <AppImage src={gameConfig.assets.ui.playButton} alt="Play button" />
           </button>
         </div>
       </div>
@@ -122,7 +122,7 @@ const Landing: React.FC<LandingProps> = ({
         />
 
         <Typography align="center" className={styles.infoBoxDateText}>
-          (1-18 Dec)
+          (19 Dec - 5 Jan)
         </Typography>
 
         <div className={styles.landingUserGameGiftNumberContainer}>
