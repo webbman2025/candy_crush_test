@@ -466,10 +466,7 @@ const Game: React.FC<GameProps> = ({
 
   const handleSpecialItemMatch = (count: number) => {
     if (gameState.isGameOver) return;
-<<<<<<< HEAD
     
-=======
->>>>>>> master
     console.log(`Special item matched ${count} times`);
     setGameState((prev: GameState) => ({
       ...prev,
