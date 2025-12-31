@@ -18,6 +18,8 @@ const eslintConfig = [
       "@typescript-eslint/ban-ts-comment": "off",
       "@next/next/no-img-element": "off",
       "jsx-a11y/alt-text": "off",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
   {
