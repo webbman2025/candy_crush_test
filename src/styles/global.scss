@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap");
+
 * {
   outline: none;
   box-sizing: border-box;
@@ -5,6 +7,8 @@
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
   user-select: none;
+  --font-noto-sans-tc: 'Noto Sans TC', sans-serif;
+  --font-montserrat: 'Montserrat', sans-serif;
 }
 
 :root {
