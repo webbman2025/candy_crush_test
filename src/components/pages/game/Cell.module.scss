@@ -4,6 +4,8 @@
   justify-content: center;
   cursor: grab;
   position: relative;
+  // background: linear-gradient(89.94deg, #135322 -0.09%, #135E2E 52.4%, #126B3B 107.01%);
+
 
   &:active {
     cursor: grabbing;
@@ -12,8 +14,8 @@
   .itemImage {
     object-fit: contain;
     pointer-events: none;
-    width: 90%;
-    height: 90%;
+    width: 100%;
+    height: 100%;
   }
 }
 

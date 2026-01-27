@@ -95,9 +95,9 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
         alt="Game over title"
       />
 
-      <Typography align="center" className={styles.titleText}>
+      {/* <Typography align="center" className={styles.titleText}>
         Your Gift box {formatNumberWithCommas(tempTotalNum)}
-      </Typography>
+      </Typography> */}
 
       <div className={styles.resultContainer}>
         <AppImage
@@ -106,7 +106,7 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
           alt="Game over title"
         />
         <div className={styles.infoTopContainer}>
-          <Typography>Get Gift box</Typography>
+          <Typography>You have received</Typography>
           <div className={styles.giftNumberContainer}>
             <AppImage
               src={gameConfig.assets.ui.giftBoxIcon}
@@ -120,7 +120,7 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
         </div>
         <div className={styles.infoBottomContainer}>
           <Typography>Your Score</Typography>
-          <Typography style={{fontWeight: 700}}>
+          <Typography className={styles.scoreNumText}>
             {formatNumberWithCommas(persistedState.score)}
           </Typography>
         </div>
@@ -128,7 +128,7 @@ const GameEndDialog: React.FC<GameEndDialogProps> = ({
 
       <button type="button" className={styles.button} onClick={onRestartGame}>
         <AppImage
-          src={gameConfig.assets.ui.playAgainButton}
+          src={gameConfig.assets.ui.restartGameButton}
           alt="Play again button"
         />
       </button>

@@ -1,7 +1,7 @@
 .root {
   :global {
     .MuiBackdrop-root {
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: #0B2E03B2;
       backdrop-filter: blur(16px);
     }
 
@@ -32,6 +32,7 @@
 }
 
 .controlsContainer {
+  margin-top: clamp(0px, calc(15 / 390 * 100vw), calc(15 / 390 * 600px));
   margin-bottom: clamp(0px, calc(8 / 390 * 100vw), calc(8 / 390 * 600px));
   width: 100%;
   display: flex;
@@ -140,7 +141,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: clamp(0px, calc(10 / 390 * 100vw), calc(10 / 390 * 600px));
+  margin-top: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
 
   .giftBoxIcon {
     width: clamp(0px, calc(42 / 390 * 100vw), calc(42 / 390 * 600px));
@@ -156,8 +157,13 @@
       calc(32 / 390 * 100vw),
       calc(32 / 390 * 600px)
     ) !important;
-    color: white;
+    color: #FFE384;
   }
+}
+
+.scoreNumText {
+  font-weight: 700 !important;
+  color: #FFE384;
 }
 
 

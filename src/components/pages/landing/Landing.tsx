@@ -80,50 +80,12 @@ const Landing: React.FC<LandingProps> = ({
         className={styles.eventDetailsButton}
         onClick={onEventDetails}
       />
-      
-      <div className={styles.landingRoundGiftBoxRow}>
-        <div className={styles.landingRoundGiftBoxLeftContainer}>
-          <AppImage
-            src={gameConfig.assets.ui.landingRoundGiftBox}
-            alt="Landing round gift box"
-            className={styles.landingRoundGiftBox}
-          />
-
-          <Typography align="center" className={styles.contentText}>
-            Round 1<br/>1-18 Dec
-          </Typography>
-
-          <button type="button" className={styles.roundPlayButton}>
-            <AppImage src={gameConfig.assets.ui.finishedButton} alt="Play button" />
-          </button>
-        </div>
-        
-        <div className={styles.landingRoundGiftBoxRightContainer}>
-          <AppImage
-            src={gameConfig.assets.ui.landingRoundGiftBox}
-            alt="Landing round gift box"
-            className={styles.landingRoundGiftBox}
-          />
-
-          <Typography align="center" className={styles.contentText}>
-            Round 2<br/>19 Dec - 5 Jan
-          </Typography>
-
-          <button type="button" className={styles.roundPlayButton} onClick={onPlay}>
-            <AppImage src={gameConfig.assets.ui.playButton} alt="Play button" />
-          </button>
-        </div>
-      </div>
 
       <div className={styles.landingUserGameInfoBox}>
         <AppImage
           src={checkInDayBox}
           alt="Landing round gift box"
         />
-
-        <Typography align="center" className={styles.infoBoxDateText}>
-          (19 Dec - 5 Jan)
-        </Typography>
 
         <div className={styles.landingUserGameGiftNumberContainer}>
           <AppImage
@@ -137,6 +99,10 @@ const Landing: React.FC<LandingProps> = ({
         </div>
       </div>
 
+      <button type="button" className={styles.playButton} onClick={onPlay}> 
+        <AppImage src={gameConfig.assets.ui.playButton} alt="Play button" />
+      </button>
+
       <button className={styles.instructionsButton} onClick={onInstructions}>
         <AppImage
           src={gameConfig.assets.ui.instructionsButton}
@@ -144,6 +110,11 @@ const Landing: React.FC<LandingProps> = ({
         />
       </button>
 
+      <AppImage
+        src={gameConfig.assets.ui.landingBackgroundBottom}
+        className={styles.landingBackgroundBottom}
+        alt="Landing background"
+      />
     </div>
   );
 };

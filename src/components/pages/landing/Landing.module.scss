@@ -1,10 +1,11 @@
 .root {
   position: relative;
+  min-height: 700px;
 }
 
 .backgroundImage {
   width: 100%;
-  height: auto;
+  height: 100%;
   background-color: #0E2414;
 }
 
@@ -24,26 +25,28 @@
 
 .titleImage {
   position: absolute;
-  top: clamp(0px, calc(22 / 390 * 100vw), calc(22 / 390 * 600px));
-  left: 20%;
-  width: 60%;
+  top: clamp(-10px, calc(-10 / 390 * 100vw), calc(-10 / 390 * 600px));
+  left: 2%;
+  width: 96%;
   height: auto;
 }
 
 .landingEventDetails {
   position: absolute;
-  top: clamp(0px, calc(120 / 390 * 100vw), calc(120 / 390 * 600px));
+  top: clamp(0px, calc(350 / 390 * 100vw), calc(350 / 390 * 600px));
   left: 5%;
   width: 90%;
   height: auto;
+  z-index: 3;
 }
 
 .eventDetailsButton {
   position: absolute;
-  top: clamp(0px, calc(140 / 390 * 100vw), calc(140 / 390 * 600px));
+  top: clamp(0px, calc(365 / 390 * 100vw), calc(365 / 390 * 600px));
   right: clamp(0px, calc(35 / 390 * 100vw), calc(35 / 390 * 600px));
   width: clamp(0px, calc(75 / 390 * 100vw), calc(75 / 390 * 600px));
   height: clamp(0px, calc(40 / 390 * 100vw), calc(40 / 390 * 600px));
+  z-index: 5;
 }
 
 .contentText {
@@ -103,9 +106,9 @@
 
 .landingUserGameInfoBox {
   position: absolute;
-  top: clamp(0px, calc(392 / 390 * 100vw), calc(392 / 390 * 600px));
-  left: 6%;
-  width: 90%;
+  top: clamp(0px, calc(375 / 390 * 100vw), calc(375 / 390 * 600px));
+  width: 100%;
+  z-index: 1;
 
   > img {
     width: 100%;
@@ -126,8 +129,8 @@
 
   .landingUserGameGiftNumberContainer {
     position: absolute;
-    right: clamp(0px, calc(45 / 390 * 100vw), calc(45 / 390 * 600px));
-    top: clamp(0px, calc(30 / 390 * 100vw), calc(30 / 390 * 600px));
+    right: clamp(0px, calc(63 / 390 * 100vw), calc(63 / 390 * 600px));
+    top: clamp(0px, calc(62 / 390 * 100vw), calc(62 / 390 * 600px));
     width: clamp(0px, calc(130 / 390 * 100vw), calc(130 / 390 * 600px));
     height: clamp(0px, calc(30 / 390 * 100vw), calc(30 / 390 * 600px));
     display: flex;
@@ -167,10 +170,11 @@
 
 .playButton {
   position: absolute;
-  top: clamp(0px, calc(319 / 390 * 100vw), calc(319 / 390 * 600px));
+  top: clamp(0px, calc(565 / 390 * 100vw), calc(565 / 390 * 600px));
   left: 50%;
-  width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
-  transform: translateX(-50%);
+  width: clamp(238px, calc(235 / 390 * 100vw), calc(238 / 390 * 600px));
+  transform: translateX(calc(-50% - -4px));
+  z-index: 3;
 
   img {
     width: 100%;
@@ -180,10 +184,11 @@
 
 .instructionsButton {
   position: absolute;
-  top: clamp(0px, calc(572 / 390 * 100vw), calc(572 / 390 * 600px));
+  top: clamp(0px, calc(640 / 390 * 100vw), calc(640 / 390 * 600px));
   left: 50%;
   width: clamp(230px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
   transform: translateX(-50%);
+  z-index: 3;
 
   img {
     width: 100%;
@@ -251,4 +256,10 @@
   100% {
     transform: translateX(50px);
   }
+}
+
+.landingBackgroundBottom {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
 }

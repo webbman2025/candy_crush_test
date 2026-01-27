@@ -8,6 +8,13 @@ const basePath = "/3Care/chi/gamify/candy-crush";
 export const gameConfig = {
   basePath,
   // ==========================================
+  // API CONFIGURATION
+  // ==========================================
+
+  campaignID: "gamehub",
+  campaignName: "candy-crush-cny",
+
+  // ==========================================
   // BOARD CONFIGURATION
   // ==========================================
   board: {
@@ -19,7 +26,7 @@ export const gameConfig = {
   // TIME CONFIGURATION
   // ==========================================
   time: {
-    limit: 30, // seconds
+    limit: 60, // seconds
     bonusPerMatch: 1, // seconds added per match
 
     // Time bar color thresholds (percentage)
@@ -131,13 +138,13 @@ export const gameConfig = {
   assets: {
     // Game item variants
     items: [
-      `${basePath}/images/xmas-giftbox.png`,
-      `${basePath}/images/items-xmas-1.png`,
-      `${basePath}/images/items-xmas-2.png`,
-      `${basePath}/images/items-xmas-3.png`,
-      `${basePath}/images/items-xmas-4.png`,
-      `${basePath}/images/items-xmas-5.png`,
-      `${basePath}/images/items-xmas-6.png`,
+      `${basePath}/images/items-new-year-goldmoney.png`,
+      `${basePath}/images/items-new-year-80k.png`,
+      `${basePath}/images/items-new-year-chong.png`,
+      `${basePath}/images/items-new-year-dice.png`,
+      `${basePath}/images/items-new-year-fat.png`,
+      `${basePath}/images/items-new-year-horse.png`,
+      `${basePath}/images/items-new-year-lucky.png`,
       //`${basePath}/images/items-pumpkin.png`,
       //`${basePath}/images/items-ghost.png`,
       //`${basePath}/images/items-empiremouth.png`,
@@ -219,11 +226,19 @@ export const gameConfig = {
         day3:  `${basePath}/images/check-in-box-day-3.png`,
       },
 
+      checkInDialogCheckInTopBanner: {
+        day1:  `${basePath}/images/check-in-box-day-1-top-banner.png`,
+        day2:  `${basePath}/images/check-in-box-day-2-top-banner.png`,
+        day3:  `${basePath}/images/check-in-box-day-3-top-banner.png`,
+      },
+
       giftBoxIcon: `${basePath}/images/xmas-giftbox.png`,
 
       gameBottomGiftNumBar: `${basePath}/images/game-bottom-gift-num-bar.png`,
 
       endDialogGiftBoxBg: `${basePath}/images/end-dialog-gift-box-bg.png`,
+
+      landingBackgroundBottom: `${basePath}/images/game-bg-bottom.png`,
     },
   },
 };

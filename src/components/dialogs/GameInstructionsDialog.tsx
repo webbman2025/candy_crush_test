@@ -63,7 +63,7 @@ const GameInstructionsDialog: React.FC<GameInstructionsDialogProps> = ({
               </div>
 
               <Typography align="center" className={styles.titleText}>
-                Christmas Special
+                CNY Special
               </Typography>
 
               <AppImage
@@ -73,7 +73,7 @@ const GameInstructionsDialog: React.FC<GameInstructionsDialogProps> = ({
               />
 
               <Typography align="center" className={styles.contentText}>
-                Special Christmas Gift Boxes will appear randomly. Grab the most Boxes to win exclusive rewards!
+                Special CNY Gold Ingots will appear randomly. Grab the most Gold Ingots will win exclusive rewards!
               </Typography>
             </div>
           </SwiperSlide>
@@ -99,7 +99,7 @@ const GameInstructionsDialog: React.FC<GameInstructionsDialogProps> = ({
 
               <Typography align="center" className={styles.contentText}>
                 Check in for 3 consecutive days to receive 
-                <span className={styles.brownText}> 30 extra Gift Boxes.</span>
+                <span className={styles.brownText}> 30 extra Gold Ingots.</span>
               </Typography>
             </div>
           </SwiperSlide>
@@ -135,7 +135,7 @@ const GameInstructionsDialog: React.FC<GameInstructionsDialogProps> = ({
               </div>
 
               <Typography align="center" className={styles.contentText}>
-                Match items to restore the timer. When time runs out, the game is over.
+                Match items to restore the timer below. When time runs out, the game is over.
               </Typography>
             </div>
           </SwiperSlide>
@@ -143,7 +143,7 @@ const GameInstructionsDialog: React.FC<GameInstructionsDialogProps> = ({
           
         </Swiper>
         <div className={styles.instructionSwiperPagination}></div>
-        <button type="button" className={styles.playButton} onClick={onPlay}>
+        <button type="button" className={styles.playNowButton} onClick={onPlay}>
           <AppImage
             src={gameConfig.assets.ui.playNowButton}
             alt="Play now button"

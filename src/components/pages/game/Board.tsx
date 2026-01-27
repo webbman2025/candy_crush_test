@@ -395,8 +395,8 @@ const Board: React.FC<BoardProps> = ({
               // Add image content
               const img = document.createElement("img");
               img.src = imageSrc;
-              img.style.width = "90%";
-              img.style.height = "90%";
+              img.style.width = "100%";
+              img.style.height = "100%";
               img.style.objectFit = "contain";
               img.style.pointerEvents = "none";
               placeholder.appendChild(img);
@@ -596,8 +596,8 @@ const Board: React.FC<BoardProps> = ({
             // Add image content
             const img = document.createElement("img");
             img.src = imageSrc;
-            img.style.width = "90%";
-            img.style.height = "90%";
+            img.style.width = "100%";
+            img.style.height = "100%";
             img.style.objectFit = "contain";
             img.style.pointerEvents = "none";
             placeholder.appendChild(img);
@@ -764,8 +764,8 @@ const Board: React.FC<BoardProps> = ({
         // Add image content with responsive size
         const img = document.createElement("img");
         img.src = imageSrc;
-        img.style.width = "90%";
-        img.style.height = "90%";
+        img.style.width = "100%";
+        img.style.height = "100%";
         img.style.objectFit = "contain";
         img.style.pointerEvents = "none";
         placeholder.appendChild(img);
@@ -929,10 +929,7 @@ const Board: React.FC<BoardProps> = ({
     return Math.floor(Math.random() * items.length) + 1;
   };
 
-  let cellSize = (390 - 12 - 12 - (width - 1) * 2) / width;
-  if (window && window.innerWidth < 389) {
-    cellSize = cellSize * 0.92;
-  }
+  const cellSize = (390 - 12 - 12 - (width - 1) * 2) / width;
   return (
     <div
       className={styles.board}

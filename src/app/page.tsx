@@ -389,8 +389,8 @@ export default function Home() {
         "/3Care/GamifyCandyCrushUserInfo.do",
         {
           params: {
-            campaignID: "gamehub",
-            name: "candy-crush",
+            campaignID: gameConfig.campaignID,
+            name: gameConfig.campaignName,
           },
         }
       );

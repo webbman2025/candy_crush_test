@@ -12,6 +12,7 @@ import AppImage from "@components/AppImage";
 import { gameConfig } from "@config/gameConfig";
 import { GameState } from "@/types/game";
 import { useRouter } from "next/navigation";
+import { config } from "process";
 
 interface GameProps {
   boardWidth: number;
@@ -56,7 +57,7 @@ interface GameProps {
 const Game: React.FC<GameProps> = ({
   boardWidth = 8,
   boardHeight = 12,
-  timeLimit = 60,
+  timeLimit = gameConfig.time.limit,
   timeBonusPerMatch = 1,
   //gamePointBaseMinimumScore = 20,
   //gamePointBase = 25,
@@ -237,8 +238,8 @@ const Game: React.FC<GameProps> = ({
       const response = await axios.post(
         "/3Care/GamifyAcquirePoint.do",
         {
-          campaignID: "gamehub",
-          name: "candy-crush",
+          campaignID: gameConfig.campaignID,
+          name: gameConfig.campaignName,
           action: "game",
           point: 0,
           score: gameState.score,
@@ -266,7 +267,8 @@ const Game: React.FC<GameProps> = ({
       const response = await axios.post(
         "/3Care/GamifyDailyCheckin.do",
         {
-          campaignID: "gamehub",
+          campaignID: gameConfig.campaignID,
+          name: gameConfig.campaignName,
           action: "checkin",
           lang: "eng",
         },
