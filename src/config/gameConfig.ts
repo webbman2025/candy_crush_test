@@ -3,7 +3,7 @@
 // ==========================================
 // This file centralizes all game settings for easy adjustment
 
-const basePath = "/3Care/chi/gamify/candy-crush";
+const basePath = "/3Care/eng/gamify/candy-crush";
 
 export const gameConfig = {
   basePath,

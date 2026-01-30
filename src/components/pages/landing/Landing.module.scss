@@ -16,6 +16,7 @@
   width: clamp(50px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
   height: clamp(50px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
   cursor: pointer;
+  z-index: 2;
 
   img {
     width: 100%;

@@ -22,6 +22,7 @@ html body {
   overflow: auto;
   width: 100vw;
   height: var(--app-height);
+  overscroll-behavior-y: none;
 }
 
 body {
