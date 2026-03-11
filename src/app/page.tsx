@@ -39,7 +39,7 @@ export default function Home() {
     fetchUserInfoScore();
   }, []);
 
-  if (searchParams.get("page") === "game") {
+  if (searchParams.get("page") !== "landing") {
     return (
       <div>
         <h1>Candy Crush Game</h1>
@@ -87,7 +87,7 @@ export default function Home() {
   return (
     <div>
       <h1>Landing Screen</h1>
-      <p>Use ?page=game in the URL to play.</p>
+      <p>Use ?page=landing in the URL to show this screen.</p>
     </div>
   );
 }
