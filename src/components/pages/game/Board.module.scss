@@ -14,6 +14,11 @@
   flex-direction: row;
 }
 
+.holeCell {
+  background: radial-gradient(circle, rgba(3, 26, 14, 0.9) 0%, rgba(5, 37, 20, 0.95) 65%, rgba(7, 45, 24, 1) 100%);
+  border-radius: 4px;
+}
+
 .verticalSeparator {
   width: clamp(0px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px));
   background: #55895D;

@@ -3,7 +3,7 @@
 // ==========================================
 // This file centralizes all game settings for easy adjustment
 
-const basePath = "/3Care/eng/gamify/candy-crush";
+const basePath = process.env.NEXT_PUBLIC_ASSET_BASE_PATH ?? "";
 
 export const gameConfig = {
   basePath,
@@ -90,23 +90,23 @@ export const gameConfig = {
     // Game effect sounds
     effects: {
       gameOver: {
-        path: `${basePath}/sounds/gameover-clipped.mp3`,
+        path: `${basePath}/sounds/gameover.wav`,
         volume: 1.0,
       },
       pause: {
-        path: `${basePath}/sounds/pause.mp3`,
+        path: `${basePath}/sounds/pause.wav`,
         volume: 1.0,
       },
       match: {
-        path: `${basePath}/sounds/eliminate.mp3`,
+        path: `${basePath}/sounds/match.wav`,
         volume: 1.0,
       },
       swap: {
-        path: `${basePath}/sounds/swap-clipped.mp3`,
+        path: `${basePath}/sounds/swap.wav`,
         volume: 1.0,
       },
       spawn: {
-        path: `${basePath}/sounds/spawn.mp3`,
+        path: `${basePath}/sounds/spawn.wav`,
         volume: 1.0,
       },
     },
@@ -114,19 +114,19 @@ export const gameConfig = {
     // Combo sounds (note: currently empty files, need actual audio content)
     combo: {
       x2: {
-        path: `${basePath}/sounds/combo-x2.mp3`,
+        path: `${basePath}/sounds/combo-x2.wav`,
         volume: 1.0,
       },
       x3: {
-        path: `${basePath}/sounds/combo-x3.mp3`,
+        path: `${basePath}/sounds/combo-x3.wav`,
         volume: 1.0,
       },
       x4: {
-        path: `${basePath}/sounds/combo-x4.mp3`,
+        path: `${basePath}/sounds/combo-x4.wav`,
         volume: 1.0,
       },
       super: {
-        path: `${basePath}/sounds/combo-super.mp3`,
+        path: `${basePath}/sounds/combo-super.wav`,
         volume: 1.0,
       },
     },

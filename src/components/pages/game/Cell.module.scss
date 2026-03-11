@@ -28,6 +28,12 @@
   cursor: grabbing;
 }
 
+.newItem {
+  .itemImage {
+    animation: tileDropIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
 // Highlight border - 100% of cell size, quick fade in
 .highlightBorder {
   position: absolute;
@@ -55,6 +61,17 @@
   z-index: 2;
   transform-origin: center center;
   animation: highlightStarScaleInOut 0.4s ease-out forwards;
+}
+
+@keyframes tileDropIn {
+  0% {
+    opacity: 0.3;
+    transform: translateY(-28%) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes highlightFadeInOut {

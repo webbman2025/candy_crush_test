@@ -80,7 +80,7 @@
     clamp(0px, calc(25 / 390 * 100vw), calc(25 / 390 * 600px));
   // border-radius: clamp(0px, calc(40 / 390 * 100vw), calc(40 / 390 * 600px));
   border-radius: 40px;
-  background-image: url("/3Care/eng/gamify/candy-crush/images/instructions-bg.png"),linear-gradient(180deg, #FFD5A1 0%, #E5AA62 95.38%);
+  background-image: url("/images/instructions-bg.png"),linear-gradient(180deg, #FFD5A1 0%, #E5AA62 95.38%);
   background-size: cover;
 }
 

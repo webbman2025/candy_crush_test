@@ -5,6 +5,79 @@ interface SoundOptions {
   loop?: boolean;
 }
 
+let sharedAudioContext: AudioContext | null = null;
+const audioBufferCache = new Map<string, AudioBuffer>();
+const audioBufferPending = new Map<string, Promise<AudioBuffer | null>>();
+let unlockListenersBound = false;
+
+const getAudioContext = (): AudioContext | null => {
+  if (typeof window === "undefined") return null;
+  if (!sharedAudioContext) {
+    sharedAudioContext = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
+  }
+  return sharedAudioContext;
+};
+
+const bindUnlockListeners = (ctx: AudioContext) => {
+  if (unlockListenersBound) return;
+  unlockListenersBound = true;
+
+  const unlock = async () => {
+    if (ctx.state === "suspended") {
+      try {
+        await ctx.resume();
+      } catch {
+        // Ignore and keep trying on next interaction.
+      }
+    }
+    if (ctx.state === "running") {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    }
+  };
+
+  window.addEventListener("pointerdown", unlock, { passive: true });
+  window.addEventListener("touchstart", unlock, { passive: true });
+  window.addEventListener("keydown", unlock);
+};
+
+const loadBuffer = async (ctx: AudioContext, soundUrl: string) => {
+  if (audioBufferCache.has(soundUrl)) {
+    return audioBufferCache.get(soundUrl) ?? null;
+  }
+  if (audioBufferPending.has(soundUrl)) {
+    return audioBufferPending.get(soundUrl) ?? null;
+  }
+
+  const pending = (async () => {
+    try {
+      const response = await fetch(soundUrl);
+      if (!response.ok) {
+        return null;
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      if (arrayBuffer.byteLength === 0) {
+        return null;
+      }
+      const decoded = await ctx.decodeAudioData(arrayBuffer);
+      if (!decoded || decoded.duration === 0) {
+        return null;
+      }
+      audioBufferCache.set(soundUrl, decoded);
+      return decoded;
+    } catch {
+      return null;
+    } finally {
+      audioBufferPending.delete(soundUrl);
+    }
+  })();
+
+  audioBufferPending.set(soundUrl, pending);
+  return pending;
+};
+
 const useSound = (soundUrl: string, options: SoundOptions = {}) => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
@@ -18,34 +91,18 @@ const useSound = (soundUrl: string, options: SoundOptions = {}) => {
   useEffect(() => {
     const initAudio = async () => {
       try {
-        // Create AudioContext
-        audioContextRef.current = new (window.AudioContext ||
-          (window as any).webkitAudioContext)();
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        audioContextRef.current = ctx;
+        bindUnlockListeners(ctx);
 
         // Create gain node for volume control
-        gainNodeRef.current = audioContextRef.current.createGain();
+        gainNodeRef.current = ctx.createGain();
         gainNodeRef.current.gain.value = volume;
-        gainNodeRef.current.connect(audioContextRef.current.destination);
-
-        // Load and decode audio file
-        const response = await fetch(soundUrl);
-        const arrayBuffer = await response.arrayBuffer();
-
-        // Check if the file has content
-        if (arrayBuffer.byteLength === 0) {
-          return;
-        }
-
-        audioBufferRef.current = await audioContextRef.current.decodeAudioData(
-          arrayBuffer
-        );
-
-        // Validate decoded audio has content
-        if (audioBufferRef.current && audioBufferRef.current.duration === 0) {
-          audioBufferRef.current = null;
-        }
-      } catch (error) {
-        console.warn("Failed to initialize sound:", error);
+        gainNodeRef.current.connect(ctx.destination);
+        audioBufferRef.current = await loadBuffer(ctx, soundUrl);
+      } catch {
+        // Keep silent if sound cannot initialize.
       }
     };
 
@@ -56,25 +113,34 @@ const useSound = (soundUrl: string, options: SoundOptions = {}) => {
         audioSourceRef.current.stop();
         audioSourceRef.current.disconnect();
       }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
+      if (gainNodeRef.current) {
+        gainNodeRef.current.disconnect();
       }
     };
   }, [soundUrl, volume]);
 
+  useEffect(() => {
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = volume;
+    }
+  }, [volume]);
+
   const play = useCallback(async () => {
     if (
       !audioContextRef.current ||
-      !audioBufferRef.current ||
       !gainNodeRef.current
     ) {
-      console.warn(
-        `Cannot play sound: Audio not loaded properly for ${soundUrl}`
-      );
       return;
     }
 
     try {
+      if (!audioBufferRef.current) {
+        audioBufferRef.current = await loadBuffer(audioContextRef.current, soundUrl);
+      }
+      if (!audioBufferRef.current) {
+        return;
+      }
+
       // Resume AudioContext if suspended
       if (audioContextRef.current.state === "suspended") {
         await audioContextRef.current.resume();
@@ -103,8 +169,8 @@ const useSound = (soundUrl: string, options: SoundOptions = {}) => {
         isPlayingRef.current = false;
         audioSourceRef.current = null;
       };
-    } catch (error) {
-      console.warn("Sound playback error:", error);
+    } catch {
+      // Keep silent if playback fails.
     }
   }, [loop, soundUrl]);
 

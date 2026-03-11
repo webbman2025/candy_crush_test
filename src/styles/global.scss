@@ -19,15 +19,17 @@ html,
 html body {
   padding: 0;
   margin: 0;
-  overflow: auto;
-  width: 100vw;
-  height: var(--app-height);
-  overscroll-behavior-y: none;
+  overflow: hidden;
+  width: 100%;
+  height: 100dvh;
+  overscroll-behavior: none;
 }
 
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: fixed;
+  inset: 0;
 }
 
 a {

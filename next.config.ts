@@ -1,11 +1,7 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  output: "export",
-      
-  basePath: '/3Care/eng/gamify/candy-crush',
-  assetPrefix: '/3Care/eng/gamify/candy-crush'
+  outputFileTracingRoot: __dirname, // ensures Desktop/candy_crush is treated as root
 };
 
 export default nextConfig;

@@ -9,6 +9,7 @@ import { gameConfig } from "@config/gameConfig";
 interface BoardProps {
   width: number;
   height: number;
+  currentLevel?: number;
   audioOn: boolean;
   onMatch: (score: number) => void;
   onResetCombo: () => void;
@@ -20,6 +21,7 @@ interface BoardProps {
 const Board: React.FC<BoardProps> = ({
   width,
   height,
+  currentLevel = 1,
   audioOn,
   onMatch,
   onResetCombo,
@@ -28,6 +30,7 @@ const Board: React.FC<BoardProps> = ({
   onSpecialItemMatch,
 }) => {
   const [board, setBoard] = useState<Item[][]>([]);
+  const [holeCells, setHoleCells] = useState<Set<string>>(new Set());
   const [dragStart, setDragStart] = useState<{
     row: number;
     col: number;
@@ -35,6 +38,7 @@ const Board: React.FC<BoardProps> = ({
   const [isFreezing, setIsFreezing] = useState(true);
   const cellRefs = useRef<{ [key: string]: HTMLDivElement }>({});
   const initialClear = useRef(true);
+  const matchEventsRef = useRef(0);
 
   const audioOnRef = useRef(audioOn);
 
@@ -56,14 +60,25 @@ const Board: React.FC<BoardProps> = ({
 
   const specialItemType = 1; // Assuming type 1 is the special item
 
+  const isHole = (row: number, col: number) => holeCells.has(`${row},${col}`);
+
   // Initialize the board with random items
   const initializeBoard = () => {
+    setHoleCells(new Set());
+    matchEventsRef.current = 0;
     const newBoard: Item[][] = [];
 
     // Initialize empty board first
     for (let row = 0; row < height; row++) {
       const newRow: Item[] = [];
       for (let col = 0; col < width; col++) {
+        if (isHole(row, col)) {
+          newRow.push({
+            type: 0,
+            isMatched: false,
+          });
+          continue;
+        }
         newRow.push({
           type: 0, // Temporary placeholder
           isMatched: false,
@@ -75,6 +90,7 @@ const Board: React.FC<BoardProps> = ({
     // Fill board ensuring no initial matches
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width; col++) {
+        if (isHole(row, col)) continue;
         let validType = false;
         let attempts = 0;
         const maxAttempts = 100; // Prevent infinite loops
@@ -103,24 +119,32 @@ const Board: React.FC<BoardProps> = ({
     setBoard(newBoard);
   };
 
-  // Helper function to check if placing an item at a specific position creates a match
-  const checkForMatchAt = (
-    board: Item[][],
+  const createsMatchAt = (
+    boardToCheck: Item[][],
     row: number,
-    col: number
+    col: number,
+    itemType: number
   ): boolean => {
-    const itemType = board[row][col].type;
+    if (isHole(row, col) || itemType <= 0) return false;
 
     // Check horizontal match (left and right)
     let horizontalCount = 1;
 
     // Count left
-    for (let c = col - 1; c >= 0 && board[row][c].type === itemType; c--) {
+    for (
+      let c = col - 1;
+      c >= 0 && !isHole(row, c) && boardToCheck[row][c].type === itemType;
+      c--
+    ) {
       horizontalCount++;
     }
 
     // Count right
-    for (let c = col + 1; c < width && board[row][c].type === itemType; c++) {
+    for (
+      let c = col + 1;
+      c < width && !isHole(row, c) && boardToCheck[row][c].type === itemType;
+      c++
+    ) {
       horizontalCount++;
     }
 
@@ -132,12 +156,20 @@ const Board: React.FC<BoardProps> = ({
     let verticalCount = 1;
 
     // Count up
-    for (let r = row - 1; r >= 0 && board[r][col].type === itemType; r--) {
+    for (
+      let r = row - 1;
+      r >= 0 && !isHole(r, col) && boardToCheck[r][col].type === itemType;
+      r--
+    ) {
       verticalCount++;
     }
 
     // Count down
-    for (let r = row + 1; r < height && board[r][col].type === itemType; r++) {
+    for (
+      let r = row + 1;
+      r < height && !isHole(r, col) && boardToCheck[r][col].type === itemType;
+      r++
+    ) {
       verticalCount++;
     }
 
@@ -146,6 +178,53 @@ const Board: React.FC<BoardProps> = ({
     }
 
     return false;
+  };
+
+  // Helper function to check if placing an item at a specific position creates a match
+  const checkForMatchAt = (
+    board: Item[][],
+    row: number,
+    col: number
+  ): boolean => {
+    return createsMatchAt(board, row, col, board[row][col].type);
+  };
+
+  const stabilizeBoardAfterRefill = (boardToStabilize: Item[][]) => {
+    const maxPasses = 24;
+    let pass = 0;
+
+    while (pass < maxPasses) {
+      const accidentalMatches = findMatches(boardToStabilize);
+      if (accidentalMatches.length === 0) {
+        break;
+      }
+
+      accidentalMatches.forEach(({ row, col }) => {
+        if (isHole(row, col)) return;
+
+        let nextType = getRandomItemType();
+        let attempts = 0;
+        const maxAttempts = Math.max(items.length * 4, 12);
+
+        while (attempts < maxAttempts) {
+          boardToStabilize[row][col].type = nextType;
+          if (!createsMatchAt(boardToStabilize, row, col, nextType)) {
+            break;
+          }
+          nextType = getRandomItemType();
+          attempts++;
+        }
+
+        boardToStabilize[row][col] = {
+          ...boardToStabilize[row][col],
+          type: nextType,
+          isMatched: false,
+          isNew: true,
+        };
+      });
+
+      pass++;
+    }
   };
 
   useEffect(() => {
@@ -180,12 +259,12 @@ const Board: React.FC<BoardProps> = ({
 
   // Handle drag operations
   const handleDragStart = (row: number, col: number) => {
-    if (isFreezing || disabled) return;
+    if (isFreezing || disabled || isHole(row, col)) return;
     setDragStart({ row, col });
   };
 
   const handleDragEnter = (row: number, col: number) => {
-    if (isFreezing || disabled || !dragStart) return;
+    if (isFreezing || disabled || !dragStart || isHole(row, col)) return;
 
     // Check if the cell is adjacent to the drag start cell
     const rowDiff = Math.abs(dragStart.row - row);
@@ -246,6 +325,14 @@ const Board: React.FC<BoardProps> = ({
       for (let col = 0; col < width - 2; col++) {
         const item = boardToCheck[row][col];
         if (
+          isHole(row, col) ||
+          isHole(row, col + 1) ||
+          isHole(row, col + 2) ||
+          item.type <= 0
+        ) {
+          continue;
+        }
+        if (
           item.type === boardToCheck[row][col + 1].type &&
           item.type === boardToCheck[row][col + 2].type
         ) {
@@ -260,6 +347,14 @@ const Board: React.FC<BoardProps> = ({
     for (let col = 0; col < width; col++) {
       for (let row = 0; row < height - 2; row++) {
         const item = boardToCheck[row][col];
+        if (
+          isHole(row, col) ||
+          isHole(row + 1, col) ||
+          isHole(row + 2, col) ||
+          item.type <= 0
+        ) {
+          continue;
+        }
         if (
           item.type === boardToCheck[row + 1][col].type &&
           item.type === boardToCheck[row + 2][col].type
@@ -283,6 +378,8 @@ const Board: React.FC<BoardProps> = ({
   };
 
   const handleMatches = (matches: { row: number; col: number }[]) => {
+    matchEventsRef.current += 1;
+
     if (matches.length > 0) {
       if (audioOnRef.current) {
         matchSound.play();
@@ -314,379 +411,116 @@ const Board: React.FC<BoardProps> = ({
     setTimeout(() => {
       replaceMatches(matches);
     }, 350);
-
-    // Hide matched cells by setting their opacity to 0
-    setTimeout(() => {
-      matches.forEach(({ row, col }) => {
-        const cellRef = cellRefs.current[getCellRefKey(row, col)];
-        if (cellRef) {
-          cellRef.style.opacity = "0";
-        }
-      });
-    }, 400);
   };
 
   const replaceMatches = async (matches: { row: number; col: number }[]) => {
-    const newBoard = [...board];
+    const newBoard = board.map((row) => row.map((item) => ({ ...item })));
+    const matchedSet = new Set(matches.map(({ row, col }) => `${row},${col}`));
 
-    // const dropEase = "bounce.out"; // Original GSAP bounce
-    const dropEase = "power3.out";
-
-    // Create placeholders for cells above matched items and hide actual cells
-    const placeholders: {
-      placeholder: HTMLDivElement;
-      row: number;
-      col: number;
-    }[] = [];
-
-    // For each column, find all cells above any matched cell
     for (let col = 0; col < width; col++) {
-      // Get all matched rows in this column, sorted
-      const matchedRowsInColumn = matches
-        .filter(({ col: matchCol }) => matchCol === col)
-        .map(({ row }) => row)
-        .sort((a, b) => a - b);
+      const playableRows: number[] = [];
+      const survivors: number[] = [];
 
-      if (matchedRowsInColumn.length > 0) {
-        // Create placeholders for all cells that will need to fall
-        for (let row = 0; row < height; row++) {
-          // Skip if this cell is matched (it will disappear)
-          const isMatched = matchedRowsInColumn.includes(row);
-          if (isMatched) continue;
+      for (let row = 0; row < height; row++) {
+        if (isHole(row, col)) continue;
+        playableRows.push(row);
+      }
 
-          // Check if this cell has any matched cells below it (meaning it will fall)
-          const hasMatchedCellsBelow = matchedRowsInColumn.some(
-            (matchedRow) => matchedRow > row
-          );
+      for (let i = playableRows.length - 1; i >= 0; i--) {
+        const row = playableRows[i];
+        if (!matchedSet.has(`${row},${col}`)) {
+          survivors.unshift(newBoard[row][col].type);
+        }
+      }
 
-          if (hasMatchedCellsBelow) {
-            const cellRef = cellRefs.current[getCellRefKey(row, col)];
-            if (cellRef) {
-              // Hide the actual cell
-              cellRef.style.opacity = "0";
+      const spawnCount = playableRows.length - survivors.length;
+      const spawned: number[] = [];
+      const nextTypes = [...Array(spawnCount).fill(0), ...survivors];
 
-              // Create placeholder
-              const cellType = newBoard[row][col].type;
-              const backgroundColor = getComputedStyle(cellRef).backgroundColor;
-              const imageSrc = getItemImage(cellType);
+      for (let idx = 0; idx < spawnCount; idx++) {
+        const row = playableRows[idx];
+        let selectedType = getRandomItemType();
+        let attempts = 0;
+        const maxAttempts = 20;
 
-              const placeholder = document.createElement("div");
-              const sourceStyles = getComputedStyle(cellRef);
-              placeholder.style.position = "absolute";
-              placeholder.style.width = sourceStyles.width;
-              placeholder.style.height = sourceStyles.height;
-              placeholder.style.borderRadius = sourceStyles.borderRadius;
-              placeholder.style.backgroundColor = backgroundColor;
-              placeholder.style.zIndex = "1000";
-              placeholder.style.display = "flex";
-              placeholder.style.alignItems = "center";
-              placeholder.style.justifyContent = "center";
-              placeholder.style.boxShadow = sourceStyles.boxShadow;
-
-              // Position at the same spot as the original cell
-              const rect = cellRef.getBoundingClientRect();
-              const boardRect = cellRef
-                .closest(`.${styles.board}`)
-                ?.getBoundingClientRect() || { left: 0, top: 0 };
-
-              placeholder.style.left = `${rect.left - boardRect.left}px`;
-              placeholder.style.top = `${rect.top - boardRect.top}px`;
-
-              // Add image content
-              const img = document.createElement("img");
-              img.src = imageSrc;
-              img.style.width = "100%";
-              img.style.height = "100%";
-              img.style.objectFit = "contain";
-              img.style.pointerEvents = "none";
-              placeholder.appendChild(img);
-
-              // Add to the board container
-              cellRef.closest(`.${styles.board}`)?.appendChild(placeholder);
-
-              // Store placeholder with its coordinates
-              placeholders.push({ placeholder, row, col });
-            }
+        while (attempts < maxAttempts) {
+          nextTypes[idx] = selectedType;
+          newBoard[row][col] = { type: selectedType, isMatched: false, isNew: true };
+          if (!createsMatchAt(newBoard, row, col, selectedType)) {
+            break;
           }
+          selectedType = getRandomItemType();
+          attempts++;
         }
-      }
-    }
 
-    // Animate placeholders falling to their new positions
-    const fallingPromises: Promise<void>[] = [];
-
-    let maxDuration = 0;
-
-    // For each placeholder, calculate how far it should fall and animate
-    placeholders.forEach(({ placeholder, row, col }) => {
-      // Calculate the actual final position of this item after board reorganization
-      let emptySpacesBelowCount = 0;
-
-      // Count empty spaces that will be created below this row
-      for (let checkRow = row + 1; checkRow < height; checkRow++) {
-        if (
-          matches.some(
-            ({ row: matchRow, col: matchCol }) =>
-              matchRow === checkRow && matchCol === col
-          )
-        ) {
-          emptySpacesBelowCount++;
-        }
+        spawned.push(selectedType);
+        nextTypes[idx] = selectedType;
       }
 
-      if (emptySpacesBelowCount > 0) {
-        // Get cell dimensions for accurate animation
-        const cellRef = cellRefs.current[getCellRefKey(row, col)];
-        if (cellRef) {
-          const cellRect = cellRef.getBoundingClientRect();
-          const cellHeight = cellRect.height;
-
-          // Get actual separator height from DOM
-          const separatorElement = cellRef
-            .closest(`.${styles.board}`)
-            ?.querySelector(`.${styles.horizontalSeparator}`);
-          const separatorHeight = separatorElement
-            ? separatorElement.getBoundingClientRect().height
-            : 2;
-
-          const totalFallDistance =
-            emptySpacesBelowCount * (cellHeight + separatorHeight);
-
-          maxDuration = Math.max(
-            maxDuration,
-            0.3 + emptySpacesBelowCount * 0.1
-          );
-
-          const promise = new Promise<void>((resolve) => {
-            gsap.to(placeholder, {
-              y: `+=${totalFallDistance}`,
-              duration: 0.3 + emptySpacesBelowCount * 0.1, // Longer duration for longer falls
-              ease: dropEase,
-              onComplete: resolve,
-            });
-          });
-          fallingPromises.push(promise);
-        }
-      }
-    });
-
-    if (fallingPromises.length > 0) {
-      // Play spawn sound when restarting game
-      if (audioOnRef.current) {
-        // spawnSound.play();
-      }
-    }
-
-    // Wait for all falling animations to complete, but don't revert them
-    Promise.all(fallingPromises).then();
-
-    await new Promise((resolve) =>
-      setTimeout(resolve, maxDuration * 1000 * 0.3)
-    ); // Wait till 30% finished
-
-    // Column by column, move items down and add new ones at the top
-    for (let col = 0; col < width; col++) {
-      let emptySpaces = 0;
-
-      // Move items down
-      for (let row = height - 1; row >= 0; row--) {
-        if (newBoard[row][col].isMatched) {
-          emptySpaces++;
-          newBoard[row][col].isMatched = false;
-        } else if (emptySpaces > 0) {
-          // Move this item down by the number of empty spaces
-          newBoard[row + emptySpaces][col] = { ...newBoard[row][col] };
-          newBoard[row][col] = {
-            type: getRandomItemType(),
-            isMatched: false,
-          };
-        }
-      }
-
-      // Fill top rows with new items
-      for (let row = 0; row < emptySpaces; row++) {
+      playableRows.forEach((row, idx) => {
+        const nextType = nextTypes[idx];
+        const oldType = newBoard[row][col].type;
         newBoard[row][col] = {
-          type: getRandomItemType(),
+          type: nextType,
           isMatched: false,
+          isNew: oldType !== nextType,
         };
+      });
+    }
+
+    if (matchEventsRef.current >= 3 && holeCells.size < 5) {
+      const nextHoles = new Set(holeCells);
+      const candidates: Array<{ row: number; col: number }> = [];
+      for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+          const key = `${row},${col}`;
+          if (nextHoles.has(key)) continue;
+          if (newBoard[row][col].type <= 0) continue;
+          candidates.push({ row, col });
+        }
+      }
+
+      if (candidates.length > 0) {
+        const picked = candidates[Math.floor(Math.random() * candidates.length)];
+        nextHoles.add(`${picked.row},${picked.col}`);
+        newBoard[picked.row][picked.col] = {
+          type: 0,
+          isMatched: false,
+          isNew: false,
+        };
+        setHoleCells(nextHoles);
       }
     }
+
+    // Prevent runaway auto-cascades by stabilizing refill output:
+    // no immediate random matches should exist right after refill.
+    stabilizeBoardAfterRefill(newBoard);
 
     setBoard(newBoard);
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    // Create placeholders for newly filled top cells and animate them falling from above
-    const newItemPlaceholders: {
-      placeholder: HTMLDivElement;
-      row: number;
-      col: number;
-      fallDistance: number;
-    }[] = [];
-
-    // For each column, identify newly filled top cells
-    for (let col = 0; col < width; col++) {
-      // Count how many matched cells were in this column (which equals new items added)
-      const matchedCellsInColumn = matches.filter(
-        ({ col: matchCol }) => matchCol === col
-      ).length;
-
-      if (matchedCellsInColumn > 0) {
-        // Create placeholders for the top cells that were newly filled
-        for (let row = 0; row < matchedCellsInColumn; row++) {
-          const cellRef = cellRefs.current[getCellRefKey(row, col)];
-          if (cellRef) {
-            // Hide the actual new cell
-            cellRef.style.opacity = "0";
-
-            // Create placeholder for the new item
-            const cellType = newBoard[row][col].type;
-            const backgroundColor = getComputedStyle(cellRef).backgroundColor;
-            const imageSrc = getItemImage(cellType);
-
-            const placeholder = document.createElement("div");
-            const sourceStyles = getComputedStyle(cellRef);
-            placeholder.style.position = "absolute";
-            placeholder.style.width = sourceStyles.width;
-            placeholder.style.height = sourceStyles.height;
-            placeholder.style.borderRadius = sourceStyles.borderRadius;
-            placeholder.style.backgroundColor = backgroundColor;
-            placeholder.style.zIndex = "1000";
-            placeholder.style.display = "flex";
-            placeholder.style.alignItems = "center";
-            placeholder.style.justifyContent = "center";
-            placeholder.style.boxShadow = sourceStyles.boxShadow;
-
-            // Position above the board (start from above and fall down)
-            const rect = cellRef.getBoundingClientRect();
-            const boardRect = cellRef
-              .closest(`.${styles.board}`)
-              ?.getBoundingClientRect() || { left: 0, top: 0 };
-
-            const cellHeight = rect.height;
-
-            // Get actual separator height from DOM
-            const separatorElement = cellRef
-              .closest(`.${styles.board}`)
-              ?.querySelector(`.${styles.horizontalSeparator}`);
-            const separatorHeight = separatorElement
-              ? separatorElement.getBoundingClientRect().height
-              : 2;
-
-            // Get row 0 position as reference
-            const row0Ref = cellRefs.current[getCellRefKey(0, col)];
-            const row0Y = row0Ref
-              ? row0Ref.getBoundingClientRect().top - boardRect.top
-              : rect.top - boardRect.top;
-
-            // Calculate start position so bottom-most item is 1 cell above row 0
-            // and all items travel the same distance
-            const startY =
-              row0Y +
-              (row - matchedCellsInColumn) * (cellHeight + separatorHeight);
-
-            // All items travel the same distance: matchedCellsInColumn cell heights
-            const fallDistance =
-              matchedCellsInColumn * (cellHeight + separatorHeight);
-
-            // Start position: stacked above the board
-            placeholder.style.left = `${rect.left - boardRect.left}px`;
-            placeholder.style.top = `${startY}px`;
-
-            // Add image content
-            const img = document.createElement("img");
-            img.src = imageSrc;
-            img.style.width = "100%";
-            img.style.height = "100%";
-            img.style.objectFit = "contain";
-            img.style.pointerEvents = "none";
-            placeholder.appendChild(img);
-
-            // Add to the board container
-            cellRef.closest(`.${styles.board}`)?.appendChild(placeholder);
-
-            // Store placeholder with its coordinates and fall distance
-            newItemPlaceholders.push({ placeholder, row, col, fallDistance });
-          }
-        }
-      }
+    if (audioOnRef.current) {
+      spawnSound.play();
     }
 
-    // Animate new items falling down from above the board
-    const newItemPromises: Promise<void>[] = [];
-
-    let maxNewItemDuration = 0;
-
-    newItemPlaceholders.forEach(({ placeholder, fallDistance }) => {
-      const promise = new Promise<void>((resolve) => {
-        gsap.to(placeholder, {
-          y: `+=${fallDistance}`,
-          duration: 0.4 + (fallDistance / 100) * 0.1, // Duration based on fall distance
-          ease: dropEase,
-          onComplete: resolve,
-        });
-      });
-      newItemPromises.push(promise);
-
-      maxNewItemDuration = Math.max(
-        maxNewItemDuration,
-        0.4 + (fallDistance / 100) * 0.1
-      );
-    });
-
-    if (newItemPromises.length > 0) {
-      // Play spawn sound when restarting game
-      if (audioOnRef.current) {
-        spawnSound.play();
-      }
-    }
-
-    new Promise((resolve) => {
-      setTimeout(resolve, 50);
-    }).then();
-
-    // Early show combo
-    if (findMatches().length === 0) {
-      setTimeout(() => {
-        onResetCombo();
-
-        setTimeout(() => {
-          setIsFreezing(false);
-        }, 500);
-      }, maxNewItemDuration * 1000 * 0.6);
-    }
-
-    // Wait for all new item animations to complete
-    await Promise.all(newItemPromises);
-
-    // Show all opacity 0 actual cells
-    for (let row = 0; row < height; row++) {
-      for (let col = 0; col < width; col++) {
-        const cellRef = cellRefs.current[getCellRefKey(row, col)];
-        if (cellRef && cellRef.style.opacity === "0") {
-          cellRef.style.opacity = "1";
-        }
-      }
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    // Remove all placeholders
-    placeholders.forEach(({ placeholder }) => {
-      placeholder.remove();
-    });
-
-    newItemPlaceholders.forEach(({ placeholder }) => {
-      placeholder.remove();
-    });
-
-    // Check for additional matches after replacements
     setTimeout(() => {
-      const matches = findMatches();
-      if (matches.length > 0) {
-        handleMatches(matches);
+      const nextMatches = findMatches(newBoard);
+      if (nextMatches.length > 0) {
+        handleMatches(nextMatches);
+      } else {
+        onResetCombo();
+        setIsFreezing(false);
       }
-    }, 32);
+    }, 120);
+
+    setTimeout(() => {
+      setBoard((prev) =>
+        prev.map((row) =>
+          row.map((item) => ({
+            ...item,
+            isNew: false,
+          }))
+        )
+      );
+    }, 240);
   };
 
   const swapItems = (
@@ -946,25 +780,36 @@ const Board: React.FC<BoardProps> = ({
           <div className={styles.row}>
             {row.map((item, colIndex) => (
               <Fragment key={`${rowIndex}-${colIndex}`}>
-                <Cell
-                  type={item.type}
-                  isMatched={item.isMatched}
-                  isSelected={Boolean(
-                    dragStart &&
-                      dragStart.row === rowIndex &&
-                      dragStart.col === colIndex
-                  )}
-                  row={rowIndex}
-                  col={colIndex}
-                  ref={(el: HTMLDivElement | null) =>
-                    registerCellRef(rowIndex, colIndex, el)
-                  }
-                  onDragStart={handleDragStart}
-                  onDragEnter={handleDragEnter}
-                  onDragEnd={handleDragEnd}
-                  items={items}
-                  cellSize={`clamp(0px, calc(${cellSize} / 390 * 100vw), calc(${cellSize} / 390 * 600px))`}
-                />
+                {isHole(rowIndex, colIndex) ? (
+                  <div
+                    className={styles.holeCell}
+                    style={{
+                      width: `clamp(0px, calc(${cellSize} / 390 * 100vw), calc(${cellSize} / 390 * 600px))`,
+                      height: `clamp(0px, calc(${cellSize} / 390 * 100vw), calc(${cellSize} / 390 * 600px))`,
+                    }}
+                  />
+                ) : (
+                  <Cell
+                    type={item.type}
+                    isMatched={item.isMatched}
+                    isNew={item.isNew}
+                    isSelected={Boolean(
+                      dragStart &&
+                        dragStart.row === rowIndex &&
+                        dragStart.col === colIndex
+                    )}
+                    row={rowIndex}
+                    col={colIndex}
+                    ref={(el: HTMLDivElement | null) =>
+                      registerCellRef(rowIndex, colIndex, el)
+                    }
+                    onDragStart={handleDragStart}
+                    onDragEnter={handleDragEnter}
+                    onDragEnd={handleDragEnd}
+                    items={items}
+                    cellSize={`clamp(0px, calc(${cellSize} / 390 * 100vw), calc(${cellSize} / 390 * 600px))`}
+                  />
+                )}
                 {/* Add vertical separator between columns (except after last column) */}
                 {colIndex < width - 1 && (
                   <div

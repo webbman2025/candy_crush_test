@@ -6,6 +6,7 @@ import { gameConfig } from "@config/gameConfig";
 interface CellProps {
   type: number;
   isMatched: boolean;
+  isNew?: boolean;
   isSelected: boolean;
   row: number;
   col: number;
@@ -21,6 +22,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     {
       type,
       isMatched,
+      isNew = false,
       isSelected,
       row,
       col,
@@ -83,6 +85,8 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     };
 
     const className = `${styles.cell} ${isMatched ? styles.matched : ""} ${
+      isNew ? styles.newItem : ""
+    } ${
       isSelected ? styles.selected : ""
     }`;
 

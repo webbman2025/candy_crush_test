@@ -17,6 +17,7 @@ import { config } from "process";
 interface GameProps {
   boardWidth: number;
   boardHeight: number;
+  currentLevel?: number;
   timeLimit: number;
   timeBonusPerMatch: number;
   gamePointBaseMinimumScore: number;
@@ -57,6 +58,7 @@ interface GameProps {
 const Game: React.FC<GameProps> = ({
   boardWidth = 8,
   boardHeight = 12,
+  currentLevel = 1,
   timeLimit = gameConfig.time.limit,
   timeBonusPerMatch = 1,
   //gamePointBaseMinimumScore = 20,
@@ -547,6 +549,7 @@ const Game: React.FC<GameProps> = ({
             <Board
               width={boardWidth}
               height={boardHeight}
+              currentLevel={currentLevel}
               audioOn={audioOn}
               onMatch={gameState.isGameOver ? () => {} : handleMatchScore}
               onResetCombo={gameState.isGameOver ? () => {} : resetCombo}
