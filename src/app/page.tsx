@@ -12,6 +12,8 @@ type UserInfo = {
   level: number;
 };
 
+const SHOW_GAME_DEBUG_HEADER = false;
+
 export default function Home() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [audioOn, setAudioOn] = useState(true);
@@ -42,15 +44,18 @@ export default function Home() {
   if (searchParams.get("page") !== "landing") {
     return (
       <div>
-        <h1>Candy Crush Game</h1>
-        {userInfo ? (
-          <p>
-            Welcome {userInfo.userId}, your score is {userInfo.score} and you’re on level{" "}
-            {userInfo.level}.
-          </p>
-        ) : (
-          <p>Loading user info...</p>
-        )}
+        {SHOW_GAME_DEBUG_HEADER &&
+          (userInfo ? (
+            <>
+              <h1>Candy Crush Game</h1>
+              <p>
+                Welcome {userInfo.userId}, your score is {userInfo.score} and you’re on level{" "}
+                {userInfo.level}.
+              </p>
+            </>
+          ) : (
+            <p>Loading user info...</p>
+          ))}
         <Game
           boardWidth={gameConfig.board.width}
           boardHeight={gameConfig.board.height}
