@@ -8,6 +8,7 @@ interface CellProps {
   isMatched: boolean;
   isNew?: boolean;
   isSelected: boolean;
+  isHinted?: boolean;
   row: number;
   col: number;
   onDragStart: (row: number, col: number) => void;
@@ -24,6 +25,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
       isMatched,
       isNew = false,
       isSelected,
+      isHinted = false,
       row,
       col,
       onDragStart,
@@ -88,6 +90,8 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
       isNew ? styles.newItem : ""
     } ${
       isSelected ? styles.selected : ""
+    } ${
+      isHinted ? styles.hintWobble : ""
     }`;
 
     return (

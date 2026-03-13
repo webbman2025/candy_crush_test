@@ -34,6 +34,13 @@
   }
 }
 
+.hintWobble {
+  .itemImage {
+    animation: hintWobble 0.55s ease-in-out infinite alternate;
+    transform-origin: 50% 75%;
+  }
+}
+
 // Highlight border - 100% of cell size, quick fade in
 .highlightBorder {
   position: absolute;
@@ -105,5 +112,14 @@
   100% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(7);
+  }
+}
+
+@keyframes hintWobble {
+  0% {
+    transform: rotate(-8deg) scale(1);
+  }
+  100% {
+    transform: rotate(8deg) scale(1.03);
   }
 }

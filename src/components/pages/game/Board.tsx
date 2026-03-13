@@ -35,6 +35,7 @@ const Board: React.FC<BoardProps> = ({
     row: number;
     col: number;
   } | null>(null);
+  const [hintCells, setHintCells] = useState<Set<string>>(new Set());
   const [isFreezing, setIsFreezing] = useState(true);
   const cellRefs = useRef<{ [key: string]: HTMLDivElement }>({});
   const initialClear = useRef(true);
@@ -63,6 +64,7 @@ const Board: React.FC<BoardProps> = ({
   const isHole = (row: number, col: number) => holeCells.has(`${row},${col}`);
   const isHoleFromSet = (holes: Set<string>, row: number, col: number) =>
     holes.has(`${row},${col}`);
+  const hintTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const buildPlayableBoard = (holes: Set<string>): Item[][] => {
     const maxBoardAttempts = 80;
@@ -291,6 +293,7 @@ const Board: React.FC<BoardProps> = ({
   // Handle drag operations
   const handleDragStart = (row: number, col: number) => {
     if (isFreezing || disabled || isHole(row, col)) return;
+    setHintCells(new Set());
     setDragStart({ row, col });
   };
 
@@ -303,6 +306,7 @@ const Board: React.FC<BoardProps> = ({
 
     if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
       // Immediately swap when dragging over an adjacent cell
+      setHintCells(new Set());
       if (audioOnRef.current) {
         swapSound.play();
       }
@@ -312,6 +316,7 @@ const Board: React.FC<BoardProps> = ({
   };
 
   const handleDragEnd = () => {
+    setHintCells(new Set());
     setDragStart(null);
   };
 
@@ -352,6 +357,13 @@ const Board: React.FC<BoardProps> = ({
     boardToCheck: Item[][],
     holes: Set<string> = holeCells
   ): boolean => {
+    return Boolean(findHintMove(boardToCheck, holes));
+  };
+
+  const findHintMove = (
+    boardToCheck: Item[][],
+    holes: Set<string> = holeCells
+  ): { row1: number; col1: number; row2: number; col2: number } | null => {
     const neighbors = [
       [0, 1],
       [1, 0],
@@ -377,13 +389,13 @@ const Board: React.FC<BoardProps> = ({
           const virtualBoard = createVirtualBoard(boardToCheck);
           virtualSwapItems(virtualBoard, row, col, nextRow, nextCol);
           if (findMatches(virtualBoard, holes).length > 0) {
-            return true;
+            return { row1: row, col1: col, row2: nextRow, col2: nextCol };
           }
         }
       }
     }
 
-    return false;
+    return null;
   };
 
   const findMatches = (
@@ -486,6 +498,7 @@ const Board: React.FC<BoardProps> = ({
   };
 
   const replaceMatches = async (matches: { row: number; col: number }[]) => {
+    setHintCells(new Set());
     const newBoard = board.map((row) => row.map((item) => ({ ...item })));
     const matchedSet = new Set(matches.map(({ row, col }) => `${row},${col}`));
     let activeHoles = holeCells;
@@ -577,6 +590,7 @@ const Board: React.FC<BoardProps> = ({
       if (audioOnRef.current) {
         spawnSound.play();
       }
+      onResetCombo();
       setIsFreezing(false);
       return;
     }
@@ -617,6 +631,7 @@ const Board: React.FC<BoardProps> = ({
     const swapItemDuration = 0.3;
 
     if (isFreezing) return;
+    setHintCells(new Set());
     setIsFreezing(true);
 
     // Create virtual board to check for matches without updating state
@@ -849,6 +864,46 @@ const Board: React.FC<BoardProps> = ({
   };
 
   const cellSize = (390 - 12 - 12 - (width - 1) * 2) / width;
+
+  useEffect(() => {
+    if (hintTimeoutRef.current) {
+      clearTimeout(hintTimeoutRef.current);
+      hintTimeoutRef.current = null;
+    }
+
+    setHintCells(new Set());
+
+    // Show hints only when board is stable and user is idle.
+    if (
+      disabled ||
+      isFreezing ||
+      board.length === 0 ||
+      dragStart ||
+      board.some((row) => row.some((cell) => cell.isMatched || cell.isNew))
+    ) {
+      return;
+    }
+
+    hintTimeoutRef.current = setTimeout(() => {
+      const hintMove = findHintMove(board, holeCells);
+      if (!hintMove) return;
+      setHintCells(
+        new Set([
+          `${hintMove.row1},${hintMove.col1}`,
+          `${hintMove.row2},${hintMove.col2}`,
+        ])
+      );
+    }, 3500);
+
+    return () => {
+      if (hintTimeoutRef.current) {
+        clearTimeout(hintTimeoutRef.current);
+        hintTimeoutRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board, holeCells, isFreezing, disabled, dragStart]);
+
   return (
     <div
       className={styles.board}
@@ -896,6 +951,7 @@ const Board: React.FC<BoardProps> = ({
                         dragStart.row === rowIndex &&
                         dragStart.col === colIndex
                     )}
+                    isHinted={hintCells.has(`${rowIndex},${colIndex}`)}
                     row={rowIndex}
                     col={colIndex}
                     ref={(el: HTMLDivElement | null) =>
