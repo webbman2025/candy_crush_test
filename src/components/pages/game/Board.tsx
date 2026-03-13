@@ -61,61 +61,79 @@ const Board: React.FC<BoardProps> = ({
   const specialItemType = 1; // Assuming type 1 is the special item
 
   const isHole = (row: number, col: number) => holeCells.has(`${row},${col}`);
+  const isHoleFromSet = (holes: Set<string>, row: number, col: number) =>
+    holes.has(`${row},${col}`);
+
+  const buildPlayableBoard = (holes: Set<string>): Item[][] => {
+    const maxBoardAttempts = 80;
+    let lastBoard: Item[][] = [];
+
+    for (let boardAttempt = 0; boardAttempt < maxBoardAttempts; boardAttempt++) {
+      const newBoard: Item[][] = [];
+
+      // Initialize empty board first
+      for (let row = 0; row < height; row++) {
+        const newRow: Item[] = [];
+        for (let col = 0; col < width; col++) {
+          if (isHoleFromSet(holes, row, col)) {
+            newRow.push({
+              type: 0,
+              isMatched: false,
+            });
+            continue;
+          }
+          newRow.push({
+            type: 0, // Temporary placeholder
+            isMatched: false,
+          });
+        }
+        newBoard.push(newRow);
+      }
+
+      // Fill board ensuring no initial matches
+      for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+          if (isHoleFromSet(holes, row, col)) continue;
+          let validType = false;
+          let attempts = 0;
+          const maxAttempts = 100; // Prevent infinite loops
+
+          while (!validType && attempts < maxAttempts) {
+            const randomType = getRandomItemType();
+            newBoard[row][col].type = randomType;
+
+            // Check if this placement creates a match
+            const hasMatch = checkForMatchAt(newBoard, row, col, holes);
+
+            if (!hasMatch) {
+              validType = true;
+            }
+            attempts++;
+          }
+
+          // Fallback: if we can't find a valid type after max attempts,
+          // use the first available type (this should rarely happen)
+          if (!validType) {
+            newBoard[row][col].type = 1;
+          }
+        }
+      }
+
+      lastBoard = newBoard;
+      if (hasPossibleMove(newBoard, holes)) {
+        return newBoard;
+      }
+    }
+
+    return lastBoard;
+  };
 
   // Initialize the board with random items
   const initializeBoard = () => {
-    setHoleCells(new Set());
+    const initialHoles = new Set<string>();
+    setHoleCells(initialHoles);
     matchEventsRef.current = 0;
-    const newBoard: Item[][] = [];
-
-    // Initialize empty board first
-    for (let row = 0; row < height; row++) {
-      const newRow: Item[] = [];
-      for (let col = 0; col < width; col++) {
-        if (isHole(row, col)) {
-          newRow.push({
-            type: 0,
-            isMatched: false,
-          });
-          continue;
-        }
-        newRow.push({
-          type: 0, // Temporary placeholder
-          isMatched: false,
-        });
-      }
-      newBoard.push(newRow);
-    }
-
-    // Fill board ensuring no initial matches
-    for (let row = 0; row < height; row++) {
-      for (let col = 0; col < width; col++) {
-        if (isHole(row, col)) continue;
-        let validType = false;
-        let attempts = 0;
-        const maxAttempts = 100; // Prevent infinite loops
-
-        while (!validType && attempts < maxAttempts) {
-          const randomType = getRandomItemType();
-          newBoard[row][col].type = randomType;
-
-          // Check if this placement creates a match
-          const hasMatch = checkForMatchAt(newBoard, row, col);
-
-          if (!hasMatch) {
-            validType = true;
-          }
-          attempts++;
-        }
-
-        // Fallback: if we can't find a valid type after max attempts,
-        // use the first available type (this should rarely happen)
-        if (!validType) {
-          newBoard[row][col].type = 1;
-        }
-      }
-    }
-
+    const newBoard = buildPlayableBoard(initialHoles);
     setBoard(newBoard);
   };
 
@@ -123,9 +141,10 @@ const Board: React.FC<BoardProps> = ({
     boardToCheck: Item[][],
     row: number,
     col: number,
-    itemType: number
+    itemType: number,
+    holes: Set<string> = holeCells
   ): boolean => {
-    if (isHole(row, col) || itemType <= 0) return false;
+    if (isHoleFromSet(holes, row, col) || itemType <= 0) return false;
 
     // Check horizontal match (left and right)
     let horizontalCount = 1;
@@ -133,7 +152,9 @@ const Board: React.FC<BoardProps> = ({
     // Count left
     for (
       let c = col - 1;
-      c >= 0 && !isHole(row, c) && boardToCheck[row][c].type === itemType;
+      c >= 0 &&
+      !isHoleFromSet(holes, row, c) &&
+      boardToCheck[row][c].type === itemType;
       c--
     ) {
       horizontalCount++;
@@ -142,7 +163,9 @@ const Board: React.FC<BoardProps> = ({
     // Count right
     for (
       let c = col + 1;
-      c < width && !isHole(row, c) && boardToCheck[row][c].type === itemType;
+      c < width &&
+      !isHoleFromSet(holes, row, c) &&
+      boardToCheck[row][c].type === itemType;
       c++
     ) {
       horizontalCount++;
@@ -158,7 +181,9 @@ const Board: React.FC<BoardProps> = ({
     // Count up
     for (
       let r = row - 1;
-      r >= 0 && !isHole(r, col) && boardToCheck[r][col].type === itemType;
+      r >= 0 &&
+      !isHoleFromSet(holes, r, col) &&
+      boardToCheck[r][col].type === itemType;
       r--
     ) {
       verticalCount++;
@@ -167,7 +192,9 @@ const Board: React.FC<BoardProps> = ({
     // Count down
     for (
       let r = row + 1;
-      r < height && !isHole(r, col) && boardToCheck[r][col].type === itemType;
+      r < height &&
+      !isHoleFromSet(holes, r, col) &&
+      boardToCheck[r][col].type === itemType;
       r++
     ) {
       verticalCount++;
@@ -184,23 +211,27 @@ const Board: React.FC<BoardProps> = ({
   const checkForMatchAt = (
     board: Item[][],
     row: number,
-    col: number
+    col: number,
+    holes: Set<string> = holeCells
   ): boolean => {
-    return createsMatchAt(board, row, col, board[row][col].type);
+    return createsMatchAt(board, row, col, board[row][col].type, holes);
   };
 
-  const stabilizeBoardAfterRefill = (boardToStabilize: Item[][]) => {
+  const stabilizeBoardAfterRefill = (
+    boardToStabilize: Item[][],
+    holes: Set<string> = holeCells
+  ) => {
     const maxPasses = 24;
     let pass = 0;
 
     while (pass < maxPasses) {
-      const accidentalMatches = findMatches(boardToStabilize);
+      const accidentalMatches = findMatches(boardToStabilize, holes);
       if (accidentalMatches.length === 0) {
         break;
       }
 
       accidentalMatches.forEach(({ row, col }) => {
-        if (isHole(row, col)) return;
+        if (isHoleFromSet(holes, row, col)) return;
 
         let nextType = getRandomItemType();
         let attempts = 0;
@@ -208,7 +239,7 @@ const Board: React.FC<BoardProps> = ({
 
         while (attempts < maxAttempts) {
           boardToStabilize[row][col].type = nextType;
-          if (!createsMatchAt(boardToStabilize, row, col, nextType)) {
+          if (!createsMatchAt(boardToStabilize, row, col, nextType, holes)) {
             break;
           }
           nextType = getRandomItemType();
@@ -317,7 +348,48 @@ const Board: React.FC<BoardProps> = ({
     return virtualBoard;
   };
 
-  const findMatches = (boardToCheck: Item[][] = board) => {
+  const hasPossibleMove = (
+    boardToCheck: Item[][],
+    holes: Set<string> = holeCells
+  ): boolean => {
+    const neighbors = [
+      [0, 1],
+      [1, 0],
+    ];
+
+    for (let row = 0; row < height; row++) {
+      for (let col = 0; col < width; col++) {
+        if (isHoleFromSet(holes, row, col) || boardToCheck[row][col].type <= 0) {
+          continue;
+        }
+
+        for (const [dr, dc] of neighbors) {
+          const nextRow = row + dr;
+          const nextCol = col + dc;
+          if (nextRow >= height || nextCol >= width) continue;
+          if (
+            isHoleFromSet(holes, nextRow, nextCol) ||
+            boardToCheck[nextRow][nextCol].type <= 0
+          ) {
+            continue;
+          }
+
+          const virtualBoard = createVirtualBoard(boardToCheck);
+          virtualSwapItems(virtualBoard, row, col, nextRow, nextCol);
+          if (findMatches(virtualBoard, holes).length > 0) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  };
+
+  const findMatches = (
+    boardToCheck: Item[][] = board,
+    holes: Set<string> = holeCells
+  ) => {
     const matches: { row: number; col: number }[] = [];
 
     // Check rows for matches
@@ -325,9 +397,9 @@ const Board: React.FC<BoardProps> = ({
       for (let col = 0; col < width - 2; col++) {
         const item = boardToCheck[row][col];
         if (
-          isHole(row, col) ||
-          isHole(row, col + 1) ||
-          isHole(row, col + 2) ||
+          isHoleFromSet(holes, row, col) ||
+          isHoleFromSet(holes, row, col + 1) ||
+          isHoleFromSet(holes, row, col + 2) ||
           item.type <= 0
         ) {
           continue;
@@ -348,9 +420,9 @@ const Board: React.FC<BoardProps> = ({
       for (let row = 0; row < height - 2; row++) {
         const item = boardToCheck[row][col];
         if (
-          isHole(row, col) ||
-          isHole(row + 1, col) ||
-          isHole(row + 2, col) ||
+          isHoleFromSet(holes, row, col) ||
+          isHoleFromSet(holes, row + 1, col) ||
+          isHoleFromSet(holes, row + 2, col) ||
           item.type <= 0
         ) {
           continue;
@@ -416,6 +488,7 @@ const Board: React.FC<BoardProps> = ({
   const replaceMatches = async (matches: { row: number; col: number }[]) => {
     const newBoard = board.map((row) => row.map((item) => ({ ...item })));
     const matchedSet = new Set(matches.map(({ row, col }) => `${row},${col}`));
+    let activeHoles = holeCells;
 
     for (let col = 0; col < width; col++) {
       const playableRows: number[] = [];
@@ -488,13 +561,25 @@ const Board: React.FC<BoardProps> = ({
           isMatched: false,
           isNew: false,
         };
+        activeHoles = nextHoles;
         setHoleCells(nextHoles);
       }
     }
 
     // Prevent runaway auto-cascades by stabilizing refill output:
     // no immediate random matches should exist right after refill.
-    stabilizeBoardAfterRefill(newBoard);
+    stabilizeBoardAfterRefill(newBoard, activeHoles);
+
+    // Prevent dead-boards: if no valid swap remains, rebuild with same holes.
+    if (!hasPossibleMove(newBoard, activeHoles)) {
+      const rebuiltBoard = buildPlayableBoard(activeHoles);
+      setBoard(rebuiltBoard);
+      if (audioOnRef.current) {
+        spawnSound.play();
+      }
+      setIsFreezing(false);
+      return;
+    }
 
     setBoard(newBoard);
     if (audioOnRef.current) {

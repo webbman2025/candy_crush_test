@@ -1,72 +1,71 @@
-# Deploy to GitHub & Vercel
+# Deploy to GitHub and Vercel (Stable Flow)
 
-## GitHub (already done)
+This project should use a single production path:
 
-- **Repo:** https://github.com/webbman2025/candy_crush_test  
-- **Branch pushed:** `CNewYear` (with UI icons and hole cell changes)
+- feature branch -> Pull Request -> `main` -> Vercel production deploy
 
-To push future changes:
+Do not deploy production directly from feature branches.
+
+## One-time setup (Vercel)
+
+1. Open [Vercel Project Settings](https://vercel.com/dashboard).
+2. In your project, go to **Settings -> Git**.
+3. Connect repository: `webbman2025/candy_crush_test`.
+4. Set **Production Branch** to `main`.
+5. Confirm framework is **Next.js** and root directory is `.`.
+
+If this is not set, pushing to GitHub will not update production.
+
+## Every update (recommended)
+
+### 1) Work on a feature branch
 
 ```bash
+git checkout -b feature/your-change
+# make changes
 git add .
-git commit -m "Your message"
-git push origin CNewYear
+git commit -m "Describe your change"
+git push -u origin feature/your-change
 ```
 
-To deploy from `main` instead, merge and push:
+### 2) Validate before opening PR
 
 ```bash
-git checkout main
-git merge CNewYear
-git push origin main
+npm run verify:release
 ```
 
----
+### 3) Open PR to `main`
 
-## Vercel
+- Base: `main`
+- Compare: `feature/your-change`
+- Merge after checks pass
 
-### 1. Sign in
+### 4) Production deploy
 
-- Go to [vercel.com](https://vercel.com) and sign in (use **Continue with GitHub**).
+After merge to `main`, Vercel should auto-deploy.
 
-### 2. Import the repo
+If needed, trigger manually:
+- Vercel -> Project -> Deployments -> latest `main` deployment -> **Redeploy**
 
-- Click **Add New…** → **Project**.
-- Under **Import Git Repository**, select **webbman2025/candy_crush_test** (or paste the repo URL).
-- Click **Import**.
+## Quick troubleshooting
 
-### 3. Configure the project
+### New code in GitHub but not in Vercel
 
-- **Framework Preset:** Next.js (should be auto-detected).
-- **Root Directory:** Leave as `.` (project root).
-- **Build Command:** `next build` (default).
-- **Output Directory:** leave default (Vercel uses Next.js output automatically).
-- **Install Command:** `npm install` (default).
+Check:
+1. Is commit in `origin/main`?
+   ```bash
+   git fetch origin && git log --oneline -1 origin/main
+   ```
+2. Vercel **Settings -> Git** connected to correct repo?
+3. Vercel **Production Branch** set to `main`?
+4. Deployment status is **Ready** (not failed)?
 
-### 4. Branch to deploy
+### Wrong branch deployed
 
-- **Production Branch:** Choose `main` or `CNewYear` (the branch you want each production deploy to use).
-- Click **Deploy**.
+- Ensure only `main` is used for production.
+- Keep feature branches for preview/testing only.
 
-### 5. After deploy
+## Useful links
 
-- Vercel will build and give you a URL like `https://candy-crush-test-xxx.vercel.app`.
-- For every push to the connected branch, Vercel will redeploy automatically.
-
-### Optional: env variables
-
-If the app needs env vars (e.g. API keys):
-
-- Open your project on Vercel → **Settings** → **Environment Variables**.
-- Add names and values, then redeploy.
-
----
-
-## Quick reference
-
-| Step              | Where / Command                    |
-|-------------------|------------------------------------|
-| Push code         | `git push origin CNewYear` (or `main`) |
-| Repo              | https://github.com/webbman2025/candy_crush_test |
-| Deploy dashboard  | https://vercel.com/dashboard       |
-| Connect repo      | Vercel → Add New → Project → Import from GitHub |
+- GitHub repo: <https://github.com/webbman2025/candy_crush_test>
+- Vercel dashboard: <https://vercel.com/dashboard>
