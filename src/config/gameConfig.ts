@@ -136,24 +136,15 @@ export const gameConfig = {
   // VISUAL ASSETS CONFIGURATION
   // ==========================================
   assets: {
-    // Game item variants
+    // Game item variants (from UI folder)
     items: [
-      `${basePath}/images/items-new-year-goldmoney.png`,
-      `${basePath}/images/items-new-year-80k.png`,
-      `${basePath}/images/items-new-year-chong.png`,
-      `${basePath}/images/items-new-year-dice.png`,
-      `${basePath}/images/items-new-year-fat.png`,
-      `${basePath}/images/items-new-year-horse.png`,
-      `${basePath}/images/items-new-year-lucky.png`,
-      //`${basePath}/images/items-pumpkin.png`,
-      //`${basePath}/images/items-ghost.png`,
-      //`${basePath}/images/items-empiremouth.png`,
-      //`${basePath}/images/items-mushroom.png`,
-      //`${basePath}/images/items-poison.png`,
-      //`${basePath}/images/items-black-candy.png`,
-      //`${basePath}/images/items-starfish.png`,
-      // `${basePath}/images/items-palm-tree.png`,
-      // `${basePath}/images/items-hat.png`,
+      `${basePath}/images/UI/butterfly01.png`,
+      `${basePath}/images/UI/carrot01.png`,
+      `${basePath}/images/UI/chick04.png`,
+      `${basePath}/images/UI/chocolate_rabbit.png`,
+      `${basePath}/images/UI/egg02.png`,
+      `${basePath}/images/UI/egg07.png`,
+      `${basePath}/images/UI/white_rabbit01.png`,
     ],
 
     // Combo popup images
@@ -213,6 +204,7 @@ export const gameConfig = {
       instructionsTitle: `${basePath}/images/instructions-title.png`,
 
       // Game elements
+      holeCell: `${basePath}/images/UI/hole.png`,
       itemHighlightBorder: `${basePath}/images/item-highlight-border.png`,
       itemHighlightStar: `${basePath}/images/item-highlight-star.png`,
       gamePoints: `${basePath}/images/game-points.png`,

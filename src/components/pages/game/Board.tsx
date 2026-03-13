@@ -787,7 +787,20 @@ const Board: React.FC<BoardProps> = ({
                       width: `clamp(0px, calc(${cellSize} / 390 * 100vw), calc(${cellSize} / 390 * 600px))`,
                       height: `clamp(0px, calc(${cellSize} / 390 * 100vw), calc(${cellSize} / 390 * 600px))`,
                     }}
-                  />
+                  >
+                    <img
+                      src={gameConfig.assets.ui.holeCell}
+                      alt=""
+                      role="presentation"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        display: "block",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  </div>
                 ) : (
                   <Cell
                     type={item.type}
