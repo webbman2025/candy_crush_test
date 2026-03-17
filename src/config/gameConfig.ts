@@ -158,7 +158,7 @@ export const gameConfig = {
     // UI images
     ui: {
       // Game screen
-      gameBackground: `${basePath}/images/game-background.png`,
+      gameBackground: `${basePath}/images/UI/easter-background.png`,
       topBar: `${basePath}/images/game-top-bar.png`,
       timeBarBackground: `${basePath}/images/time-bar-bg.png`,
       timeBarBlue: `${basePath}/images/time-bar-blue.png`,
