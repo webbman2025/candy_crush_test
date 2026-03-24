@@ -23,6 +23,19 @@ export const gameConfig = {
   },
 
   // ==========================================
+  // LEVEL GOALS (egg target = egg tile matches, maxHoles = hole limit for level)
+  // Item types 5 and 6 = both use egg02.png (1-based index in assets.items)
+  // ==========================================
+  levelEggItemTypes: [5, 6],
+  levels: [
+    { level: 1, eggTarget: 20, maxHoles: 0 },
+    { level: 2, eggTarget: 50, maxHoles: 3 },
+    { level: 3, eggTarget: 100, maxHoles: 6 },
+    { level: 4, eggTarget: 10000, maxHoles: 9 },
+    { level: 5, eggTarget: 20000, maxHoles: 12 },
+  ],
+
+  // ==========================================
   // TIME CONFIGURATION
   // ==========================================
   time: {
@@ -143,7 +156,7 @@ export const gameConfig = {
       `${basePath}/images/UI/chick04.png`,
       `${basePath}/images/UI/chocolate_rabbit.png`,
       `${basePath}/images/UI/egg02.png`,
-      `${basePath}/images/UI/egg07.png`,
+      `${basePath}/images/UI/egg02.png`,
       `${basePath}/images/UI/white_rabbit01.png`,
     ],
 
@@ -159,7 +172,7 @@ export const gameConfig = {
     ui: {
       // Game screen
       gameBackground: `${basePath}/images/UI/easter-background.png`,
-      topBar: `${basePath}/images/game-top-bar.png`,
+      topBar: `${basePath}/images/UI/scoreboard-live-frame.png`,
       timeBarBackground: `${basePath}/images/time-bar-bg.png`,
       timeBarBlue: `${basePath}/images/time-bar-blue.png`,
       timeBarYellow: `${basePath}/images/time-bar-yellow.png`,
@@ -224,7 +237,7 @@ export const gameConfig = {
         day3:  `${basePath}/images/check-in-box-day-3-top-banner.png`,
       },
 
-      giftBoxIcon: `${basePath}/images/xmas-giftbox.png`,
+      giftBoxIcon: `${basePath}/images/UI/egg02.png`,
 
       gameBottomGiftNumBar: `${basePath}/images/game-bottom-gift-num-bar.png`,
 

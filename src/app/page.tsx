@@ -22,6 +22,7 @@ export default function Home() {
   const [specialItemPoint, setSpecialItemPoint] = useState(0);
   const [tempSpecialItemPoint, setTempSpecialItemPoint] = useState(0);
   const [checkInToday, setCheckInToday] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState(1);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -41,6 +42,12 @@ export default function Home() {
     fetchUserInfoScore();
   }, []);
 
+  useEffect(() => {
+    if (userInfo?.level != null) {
+      setCurrentLevel(userInfo.level);
+    }
+  }, [userInfo?.level]);
+
   if (searchParams.get("page") !== "landing") {
     return (
       <div>
@@ -57,9 +64,10 @@ export default function Home() {
             <p>Loading user info...</p>
           ))}
         <Game
+          key={currentLevel}
           boardWidth={gameConfig.board.width}
           boardHeight={gameConfig.board.height}
-          currentLevel={userInfo?.level ?? 1}
+          currentLevel={currentLevel}
           timeLimit={gameConfig.time.limit}
           timeBonusPerMatch={gameConfig.time.bonusPerMatch}
           gamePointBaseMinimumScore={gameConfig.scoring.gamePointBaseMinimumScore}
@@ -79,6 +87,11 @@ export default function Home() {
           setAudioOn={setAudioOn}
           setBestScore={setBestScore}
           onBackToMenu={() => router.push("/")}
+          onLevelComplete={() =>
+            setCurrentLevel((prev) =>
+              Math.min(prev + 1, gameConfig.levels.length)
+            )
+          }
           fetchUserInfoScore={fetchUserInfoScore}
           setSpecialItemPoint={setSpecialItemPoint}
           setContinuousCheckinCount={setContinuousCheckinCount}

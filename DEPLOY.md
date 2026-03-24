@@ -20,12 +20,14 @@ If this is not set, pushing to GitHub will not update production.
 
 ### 1) Work on a feature branch
 
+You’re on `feature/gameplay-enhancements` for new gameplay work. Keep `main` clean.
+
 ```bash
-git checkout -b feature/your-change
-# make changes
+# Already done once: git checkout -b feature/gameplay-enhancements
+# Make your code changes in the repo, then:
 git add .
 git commit -m "Describe your change"
-git push -u origin feature/your-change
+git push -u origin feature/gameplay-enhancements
 ```
 
 ### 2) Validate before opening PR
@@ -46,6 +48,39 @@ After merge to `main`, Vercel should auto-deploy.
 
 If needed, trigger manually:
 - Vercel -> Project -> Deployments -> latest `main` deployment -> **Redeploy**
+
+## Feature-branch workflow (gameplay enhancements)
+
+Use this so `main` stays safe and you can revert easily.
+
+| Step | Command / action |
+|------|-------------------|
+| **Start** | You’re on `feature/gameplay-enhancements` (already created). |
+| **Edit** | Change code as usual. Run `npm run dev` to test. |
+| **Save** | `git add .` → `git commit -m "Your message"` |
+| **If it works** | Merge into main (see “If enhancements work” below). |
+| **If it breaks** | Throw away the branch (see “If enhancements break” below). |
+
+**If enhancements work** — merge to main and deploy:
+```bash
+git checkout main
+git merge feature/gameplay-enhancements
+git push origin main
+# Optional: keep branch for more work
+git checkout feature/gameplay-enhancements
+```
+
+**If enhancements break** — go back to last good state:
+```bash
+git checkout main
+git branch -D feature/gameplay-enhancements
+# You’re back to main; no enhancement commits. To recreate the branch later:
+git checkout -b feature/gameplay-enhancements
+```
+
+**Restore point:** Tag `restore-point-before-enhancements` = commit with Easter background. To reset main to that exact state: `git checkout main` then `git reset --hard restore-point-before-enhancements`.
+
+---
 
 ## Quick troubleshooting
 

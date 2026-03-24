@@ -10,8 +10,11 @@ interface BoardProps {
   width: number;
   height: number;
   currentLevel?: number;
+  maxHolesForLevel?: number;
+  onHoleCountChange?: (count: number) => void;
   audioOn: boolean;
   onMatch: (score: number) => void;
+  onEggMatch?: (eggCount: number) => void;
   onResetCombo: () => void;
   items: string[];
   disabled?: boolean;
@@ -22,8 +25,11 @@ const Board: React.FC<BoardProps> = ({
   width,
   height,
   currentLevel = 1,
+  maxHolesForLevel = 0,
+  onHoleCountChange,
   audioOn,
   onMatch,
+  onEggMatch,
   onResetCombo,
   items,
   disabled = false,
@@ -60,6 +66,14 @@ const Board: React.FC<BoardProps> = ({
   // const invalidSound = useSound("/sounds/invalid.mp3", { volume: 0.4 });
 
   const specialItemType = 1; // Assuming type 1 is the special item
+
+  // Only types 5 and 6 use egg02.png – they match each other; other types match only themselves.
+  const isEggType = (t: number): boolean => t === 5 || t === 6;
+  const sameVisualType = (a: number, b: number): boolean => {
+    if (a <= 0 || b <= 0) return false;
+    if (a === b) return true;
+    return isEggType(a) && isEggType(b);
+  };
 
   const isHole = (row: number, col: number) => holeCells.has(`${row},${col}`);
   const isHoleFromSet = (holes: Set<string>, row: number, col: number) =>
@@ -104,8 +118,8 @@ const Board: React.FC<BoardProps> = ({
             const randomType = getRandomItemType();
             newBoard[row][col].type = randomType;
 
-            // Check if this placement creates a match
-            const hasMatch = checkForMatchAt(newBoard, row, col, holes);
+            // Check if this placement creates a match (use visual check so 3 egg02 in a row are avoided)
+            const hasMatch = checkForVisualMatchAt(newBoard, row, col, holes);
 
             if (!hasMatch) {
               validType = true;
@@ -219,6 +233,69 @@ const Board: React.FC<BoardProps> = ({
     return createsMatchAt(board, row, col, board[row][col].type, holes);
   };
 
+  // Like createsMatchAt but treats all egg types (e.g. 5 and 6) as same visual – avoids 3 egg02 in a row on fill
+  const createsVisualMatchAt = (
+    boardToCheck: Item[][],
+    row: number,
+    col: number,
+    itemType: number,
+    holes: Set<string> = holeCells
+  ): boolean => {
+    if (isHoleFromSet(holes, row, col) || itemType <= 0) return false;
+
+    let horizontalCount = 1;
+    for (
+      let c = col - 1;
+      c >= 0 &&
+      !isHoleFromSet(holes, row, c) &&
+      sameVisualType(itemType, boardToCheck[row][c].type);
+      c--
+    ) {
+      horizontalCount++;
+    }
+    for (
+      let c = col + 1;
+      c < width &&
+      !isHoleFromSet(holes, row, c) &&
+      sameVisualType(itemType, boardToCheck[row][c].type);
+      c++
+    ) {
+      horizontalCount++;
+    }
+    if (horizontalCount >= 3) return true;
+
+    let verticalCount = 1;
+    for (
+      let r = row - 1;
+      r >= 0 &&
+      !isHoleFromSet(holes, r, col) &&
+      sameVisualType(itemType, boardToCheck[r][col].type);
+      r--
+    ) {
+      verticalCount++;
+    }
+    for (
+      let r = row + 1;
+      r < height &&
+      !isHoleFromSet(holes, r, col) &&
+      sameVisualType(itemType, boardToCheck[r][col].type);
+      r++
+    ) {
+      verticalCount++;
+    }
+    if (verticalCount >= 3) return true;
+    return false;
+  };
+
+  const checkForVisualMatchAt = (
+    board: Item[][],
+    row: number,
+    col: number,
+    holes: Set<string> = holeCells
+  ): boolean => {
+    return createsVisualMatchAt(board, row, col, board[row][col].type, holes);
+  };
+
   const stabilizeBoardAfterRefill = (
     boardToStabilize: Item[][],
     holes: Set<string> = holeCells
@@ -227,7 +304,7 @@ const Board: React.FC<BoardProps> = ({
     let pass = 0;
 
     while (pass < maxPasses) {
-      const accidentalMatches = findMatches(boardToStabilize, holes);
+      const accidentalMatches = findVisualMatches(boardToStabilize, holes);
       if (accidentalMatches.length === 0) {
         break;
       }
@@ -241,7 +318,7 @@ const Board: React.FC<BoardProps> = ({
 
         while (attempts < maxAttempts) {
           boardToStabilize[row][col].type = nextType;
-          if (!createsMatchAt(boardToStabilize, row, col, nextType, holes)) {
+          if (!createsVisualMatchAt(boardToStabilize, row, col, nextType, holes)) {
             break;
           }
           nextType = getRandomItemType();
@@ -263,6 +340,10 @@ const Board: React.FC<BoardProps> = ({
   useEffect(() => {
     initializeBoard();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    onHoleCountChange?.(holeCells.size);
+  }, [holeCells, onHoleCountChange]);
 
   useEffect(() => {
     if (initialClear.current && board.length > 0) {
@@ -360,6 +441,49 @@ const Board: React.FC<BoardProps> = ({
     return Boolean(findHintMove(boardToCheck, holes));
   };
 
+  const keyOf = (row: number, col: number) => `${row},${col}`;
+
+  // Keep only matches that are actually triggered by the swapped cells.
+  // This prevents clearing unrelated pre-existing matches elsewhere on the board.
+  const getSwapTriggeredMatches = (
+    allMatches: { row: number; col: number }[],
+    row1: number,
+    col1: number,
+    row2: number,
+    col2: number
+  ): { row: number; col: number }[] => {
+    if (allMatches.length === 0) return [];
+
+    const allSet = new Set(allMatches.map((m) => keyOf(m.row, m.col)));
+    const seedKeys = [keyOf(row1, col1), keyOf(row2, col2)].filter((k) =>
+      allSet.has(k)
+    );
+    if (seedKeys.length === 0) return [];
+
+    const visited = new Set<string>();
+    const queue: string[] = [...seedKeys];
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current || visited.has(current)) continue;
+      visited.add(current);
+      const [r, c] = current.split(",").map(Number);
+      const neighbors = [
+        [r - 1, c],
+        [r + 1, c],
+        [r, c - 1],
+        [r, c + 1],
+      ];
+      neighbors.forEach(([nr, nc]) => {
+        const nKey = keyOf(nr, nc);
+        if (allSet.has(nKey) && !visited.has(nKey)) {
+          queue.push(nKey);
+        }
+      });
+    }
+
+    return allMatches.filter((m) => visited.has(keyOf(m.row, m.col)));
+  };
+
   const findHintMove = (
     boardToCheck: Item[][],
     holes: Set<string> = holeCells
@@ -388,7 +512,15 @@ const Board: React.FC<BoardProps> = ({
 
           const virtualBoard = createVirtualBoard(boardToCheck);
           virtualSwapItems(virtualBoard, row, col, nextRow, nextCol);
-          if (findMatches(virtualBoard, holes).length > 0) {
+          const allMatches = findMatches(virtualBoard, holes);
+          const triggeredMatches = getSwapTriggeredMatches(
+            allMatches,
+            row,
+            col,
+            nextRow,
+            nextCol
+          );
+          if (triggeredMatches.length > 0) {
             return { row1: row, col1: col, row2: nextRow, col2: nextCol };
           }
         }
@@ -403,23 +535,19 @@ const Board: React.FC<BoardProps> = ({
     holes: Set<string> = holeCells
   ) => {
     const matches: { row: number; col: number }[] = [];
+    const a = (r: number, c: number) => boardToCheck[r][c].type;
+    const isMatch3 = (t1: number, t2: number, t3: number) =>
+      t1 > 0 && t2 > 0 && t3 > 0 && sameVisualType(t1, t2) && sameVisualType(t2, t3);
 
-    // Check rows for matches
+    // Check rows for matches (eggs: 5 and 6 count as same so 5-6-5 matches)
     for (let row = 0; row < height; row++) {
       for (let col = 0; col < width - 2; col++) {
-        const item = boardToCheck[row][col];
         if (
           isHoleFromSet(holes, row, col) ||
           isHoleFromSet(holes, row, col + 1) ||
-          isHoleFromSet(holes, row, col + 2) ||
-          item.type <= 0
-        ) {
-          continue;
-        }
-        if (
-          item.type === boardToCheck[row][col + 1].type &&
-          item.type === boardToCheck[row][col + 2].type
-        ) {
+          isHoleFromSet(holes, row, col + 2)
+        ) continue;
+        if (isMatch3(a(row, col), a(row, col + 1), a(row, col + 2))) {
           matches.push({ row, col });
           matches.push({ row, col: col + 1 });
           matches.push({ row, col: col + 2 });
@@ -430,19 +558,12 @@ const Board: React.FC<BoardProps> = ({
     // Check columns for matches
     for (let col = 0; col < width; col++) {
       for (let row = 0; row < height - 2; row++) {
-        const item = boardToCheck[row][col];
         if (
           isHoleFromSet(holes, row, col) ||
           isHoleFromSet(holes, row + 1, col) ||
-          isHoleFromSet(holes, row + 2, col) ||
-          item.type <= 0
-        ) {
-          continue;
-        }
-        if (
-          item.type === boardToCheck[row + 1][col].type &&
-          item.type === boardToCheck[row + 2][col].type
-        ) {
+          isHoleFromSet(holes, row + 2, col)
+        ) continue;
+        if (isMatch3(a(row, col), a(row + 1, col), a(row + 2, col))) {
           matches.push({ row, col });
           matches.push({ row: row + 1, col });
           matches.push({ row: row + 2, col });
@@ -461,6 +582,57 @@ const Board: React.FC<BoardProps> = ({
     return uniqueMatches;
   };
 
+  // Like findMatches but treats egg types as same – finds 3+ egg02 in a row (e.g. 5-6-5)
+  const findVisualMatches = (
+    boardToCheck: Item[][],
+    holes: Set<string> = holeCells
+  ): { row: number; col: number }[] => {
+    const matches: { row: number; col: number }[] = [];
+
+    for (let row = 0; row < height; row++) {
+      for (let col = 0; col < width - 2; col++) {
+        const a = boardToCheck[row][col].type;
+        const b = boardToCheck[row][col + 1].type;
+        const c = boardToCheck[row][col + 2].type;
+        if (
+          isHoleFromSet(holes, row, col) ||
+          isHoleFromSet(holes, row, col + 1) ||
+          isHoleFromSet(holes, row, col + 2) ||
+          a <= 0 || b <= 0 || c <= 0
+        ) continue;
+        if (sameVisualType(a, b) && sameVisualType(b, c)) {
+          matches.push({ row, col });
+          matches.push({ row, col: col + 1 });
+          matches.push({ row, col: col + 2 });
+        }
+      }
+    }
+    for (let col = 0; col < width; col++) {
+      for (let row = 0; row < height - 2; row++) {
+        const a = boardToCheck[row][col].type;
+        const b = boardToCheck[row + 1][col].type;
+        const c = boardToCheck[row + 2][col].type;
+        if (
+          isHoleFromSet(holes, row, col) ||
+          isHoleFromSet(holes, row + 1, col) ||
+          isHoleFromSet(holes, row + 2, col) ||
+          a <= 0 || b <= 0 || c <= 0
+        ) continue;
+        if (sameVisualType(a, b) && sameVisualType(b, c)) {
+          matches.push({ row, col });
+          matches.push({ row: row + 1, col });
+          matches.push({ row: row + 2, col });
+        }
+      }
+    }
+    return Array.from(
+      new Set(matches.map((m) => `${m.row},${m.col}`))
+    ).map((id) => {
+      const [r, c] = id.split(",").map(Number);
+      return { row: r, col: c };
+    });
+  };
+
   const handleMatches = (matches: { row: number; col: number }[]) => {
     matchEventsRef.current += 1;
 
@@ -474,6 +646,7 @@ const Board: React.FC<BoardProps> = ({
 
     // Count special items (type === 1) in matches
     let specialItemCount = 0;
+    let eggMatchCount = 0;
 
     // Mark matched items
     matches.forEach(({ row, col }) => {
@@ -481,11 +654,17 @@ const Board: React.FC<BoardProps> = ({
       if (board[row][col].type === specialItemType) {
         specialItemCount++;
       }
+      if (isEggType(board[row][col].type)) {
+        eggMatchCount++;
+      }
     });
 
     // Call parent callback if there are special items matched
     if (specialItemCount > 0 && onSpecialItemMatch) {
       onSpecialItemMatch(specialItemCount);
+    }
+    if (eggMatchCount > 0 && onEggMatch) {
+      onEggMatch(eggMatchCount);
     }
 
     setBoard(newBoard);
@@ -532,7 +711,7 @@ const Board: React.FC<BoardProps> = ({
         while (attempts < maxAttempts) {
           nextTypes[idx] = selectedType;
           newBoard[row][col] = { type: selectedType, isMatched: false, isNew: true };
-          if (!createsMatchAt(newBoard, row, col, selectedType)) {
+          if (!createsVisualMatchAt(newBoard, row, col, selectedType)) {
             break;
           }
           selectedType = getRandomItemType();
@@ -554,7 +733,11 @@ const Board: React.FC<BoardProps> = ({
       });
     }
 
-    if (matchEventsRef.current >= 3 && holeCells.size < 5) {
+    if (
+      matchEventsRef.current >= 3 &&
+      maxHolesForLevel > 0 &&
+      holeCells.size < maxHolesForLevel
+    ) {
       const nextHoles = new Set(holeCells);
       const candidates: Array<{ row: number; col: number }> = [];
       for (let row = 0; row < height; row++) {
@@ -637,7 +820,14 @@ const Board: React.FC<BoardProps> = ({
     // Create virtual board to check for matches without updating state
     const virtualBoard = createVirtualBoard(board);
     virtualSwapItems(virtualBoard, row1, col1, row2, col2);
-    const potentialMatches = findMatches(virtualBoard);
+    const allPotentialMatches = findMatches(virtualBoard);
+    const potentialMatches = getSwapTriggeredMatches(
+      allPotentialMatches,
+      row1,
+      col1,
+      row2,
+      col2
+    );
 
     // Get references to the cells to animate
     const cell1Ref = cellRefs.current[getCellRefKey(row1, col1)];
