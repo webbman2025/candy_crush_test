@@ -21,48 +21,149 @@
 
 .topBarContainer {
   position: relative;
-
-  img {
-    width: 100%;
-    height: auto;
-  }
+  width: min(96vw, 640px);
+  max-width: 100%;
 }
 
-.topBarBestScoreContainer {
+.topBarImage {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.scoreboardLeft {
   position: absolute;
-  top: clamp(0px, calc(67 / 390 * 100vw), calc(67 / 390 * 600px));
-  left: clamp(0px, calc(90 / 390 * 100vw), calc(90 / 390 * 600px));
-  width: clamp(0px, calc(130 / 390 * 100vw), calc(130 / 390 * 600px));
-  height: clamp(0px, calc(29 / 390 * 100vw), calc(29 / 390 * 600px));
+  top: 28%;
+  left: 7.5%;
+  z-index: 1;
+  line-height: 1.02;
+}
+
+.scoreboardBestLine,
+.scoreboardScoreLine {
+  font-family: var(--font-montserrat) !important;
+  font-weight: 800 !important;
+  font-size: clamp(20px, 3.6vw, 48px) !important;
+  color: #8f531e;
+  text-shadow:
+    -1px -1px 0 rgba(255, 248, 224, 0.85),
+     1px -1px 0 rgba(255, 248, 224, 0.85),
+    -1px  1px 0 rgba(255, 248, 224, 0.85),
+     1px  1px 0 rgba(255, 248, 224, 0.85);
+}
+
+.scoreboardValue {
+  color: #5b8f1f;
+}
+
+.scoreboardEggIcon {
+  position: absolute;
+  top: 31%;
+  left: 41.7%;
+  width: 10.8%;
+  aspect-ratio: 1;
+  object-fit: contain;
   z-index: 1;
 }
 
-.topBarScoreContainer {
+.scoreboardEggsText {
   position: absolute;
-  top: clamp(0px, calc(67 / 390 * 100vw), calc(67 / 390 * 600px));
-  left: clamp(0px, calc(230 / 390 * 100vw), calc(230 / 390 * 600px));
-  width: clamp(0px, calc(130 / 390 * 100vw), calc(130 / 390 * 600px));
-  height: clamp(0px, calc(29 / 390 * 100vw), calc(29 / 390 * 600px));
-}
-
-.scoreText {
+  top: 39%;
+  left: 55.4%;
   font-family: var(--font-montserrat) !important;
-  font-weight: 700 !important;
-  font-size: clamp(
-    0px,
-    calc(20 / 390 * 100vw),
-    calc(20 / 390 * 600px)
-  ) !important;
-  text-align: center;
-  color: white;
+  font-weight: 800 !important;
+  font-size: clamp(18px, 3.4vw, 44px) !important;
+  color: #8f531e;
+  text-shadow:
+    -1px -1px 0 rgba(255, 248, 224, 0.85),
+     1px -1px 0 rgba(255, 248, 224, 0.85),
+    -1px  1px 0 rgba(255, 248, 224, 0.85),
+     1px  1px 0 rgba(255, 248, 224, 0.85);
+  z-index: 1;
 }
 
 .pauseButton {
   position: absolute;
-  top: clamp(0px, calc(44 / 390 * 100vw), calc(44 / 390 * 600px));
-  left: clamp(0px, calc(29 / 390 * 100vw), calc(29 / 390 * 600px));
-  width: clamp(0px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
-  height: clamp(0px, calc(50 / 390 * 100vw), calc(50 / 390 * 600px));
+  top: 34%;
+  right: 4.5%;
+  width: 7.8%;
+  aspect-ratio: 1;
+  border: clamp(2px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px)) solid #f2ca5a;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffe48c, #efbc44);
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(75, 43, 8, 0.35);
+
+  &::before {
+    content: "II";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-montserrat);
+    font-weight: 800;
+    font-size: clamp(0px, calc(20 / 390 * 100vw), calc(20 / 390 * 600px));
+    color: #95530f;
+    letter-spacing: clamp(1px, calc(2 / 390 * 100vw), calc(2 / 390 * 600px));
+  }
+}
+
+.nextLevelOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.nextLevelPopup {
+  background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%);
+  border: 3px solid #81c784;
+  border-radius: 16px;
+  padding: clamp(20px, calc(28 / 390 * 100vw), calc(28 / 390 * 600px));
+  text-align: center;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.nextLevelTitle {
+  font-family: var(--font-montserrat) !important;
+  font-weight: 800 !important;
+  font-size: clamp(20px, calc(26 / 390 * 100vw), calc(26 / 390 * 600px)) !important;
+  color: #fff;
+  margin-bottom: clamp(8px, calc(12 / 390 * 100vw), calc(12 / 390 * 600px)) !important;
+}
+
+.nextLevelMessage {
+  font-family: var(--font-montserrat) !important;
+  font-weight: 600 !important;
+  font-size: clamp(14px, calc(18 / 390 * 100vw), calc(18 / 390 * 600px)) !important;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: clamp(16px, calc(24 / 390 * 100vw), calc(24 / 390 * 600px)) !important;
+}
+
+.nextLevelButton {
+  font-family: var(--font-montserrat) !important;
+  font-weight: 700 !important;
+  font-size: clamp(14px, calc(18 / 390 * 100vw), calc(18 / 390 * 600px)) !important;
+  color: #1b5e20;
+  background: #c8e6c9;
+  border: 2px solid #81c784;
+  border-radius: 12px;
+  padding: clamp(10px, calc(14 / 390 * 100vw), calc(14 / 390 * 600px)) clamp(24px, calc(32 / 390 * 100vw), calc(32 / 390 * 600px));
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+
+  &:hover {
+    background: #a5d6a7;
+  }
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 .boardWrapper {

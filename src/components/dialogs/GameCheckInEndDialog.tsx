@@ -55,12 +55,12 @@ const GameEndDialog: React.FC<GameCheckInEndDialogProps> = ({
             ? "2 more check-ins to earn"
             : continuousCheckinCount === 2
               ? "1 more check-in to earn"
-              : "30 extra Gold Ingots earned! Enjoy!" }
+              : "30 extra Egg Goals earned! Enjoy!" }
         </Typography>
 
         <Typography align="center" className={styles.contentOtherText}>
           { continuousCheckinCount === 1 || continuousCheckinCount === 2
-            ? "30 extra Gold Ingots." : "" }
+            ? "30 extra Egg Goals." : "" }
         </Typography>
       </div>
 

@@ -12,7 +12,11 @@ import AppImage from "@components/AppImage";
 import { gameConfig } from "@config/gameConfig";
 import { GameState } from "@/types/game";
 import { useRouter } from "next/navigation";
-import { config } from "process";
+
+// Set to true to stop the timer for testing (eggs/holes goals).
+const TESTING_TIMER_OFF = true;
+// Set to false when using a clean scoreboard background (no baked text).
+const SHOW_DYNAMIC_SCOREBOARD_TEXT = true;
 
 interface GameProps {
   boardWidth: number;
@@ -47,6 +51,7 @@ interface GameProps {
   setAudioOn: (audioOn: boolean) => void;
   setBestScore: (bestScore: number) => void;
   onBackToMenu: () => void;
+  onLevelComplete?: () => void;
   onCriticalTimeChange?: (isCritical: boolean) => void;
   fetchUserInfoScore: () => void;
   setSpecialItemPoint: (specialItemPoint: number) => void;
@@ -78,6 +83,7 @@ const Game: React.FC<GameProps> = ({
   setAudioOn,
   setBestScore,
   onBackToMenu,
+  onLevelComplete,
   onCriticalTimeChange,
   fetchUserInfoScore,
   setSpecialItemPoint,
@@ -105,8 +111,28 @@ const Game: React.FC<GameProps> = ({
   const [openPauseDialog, setOpenPauseDialog] = useState(false);
   const [openEndDialog, setOpenEndDialog] = useState(false);
   const [openCheckInEndDialog, setOpenCheckInEndDialog] = useState(false);
+  const [holeCount, setHoleCount] = useState(0);
+  const [eggsCollectedThisLevel, setEggsCollectedThisLevel] = useState(0);
+  const [showNextLevelPopup, setShowNextLevelPopup] = useState(false);
 
   const audioOnRef = useRef(audioOn);
+
+  const levelConfig =
+    gameConfig.levels[
+      Math.min(currentLevel - 1, gameConfig.levels.length - 1)
+    ] ?? gameConfig.levels[0];
+  const eggIconSrc = gameConfig.assets.items[4] || gameConfig.assets.items[0];
+
+  const handleEggMatch = (count: number) => {
+    if (gameState.isGameOver || showNextLevelPopup) return;
+    setEggsCollectedThisLevel((prev) => prev + count);
+  };
+
+  useEffect(() => {
+    if (eggsCollectedThisLevel >= levelConfig.eggTarget) {
+      setShowNextLevelPopup(true);
+    }
+  }, [eggsCollectedThisLevel, levelConfig.eggTarget]);
 
   // Sound effects
   const gameOverSound = useSound(gameConfig.sounds.effects.gameOver.path, {
@@ -157,7 +183,7 @@ const Game: React.FC<GameProps> = ({
   useEffect(() => {
     let timer: NodeJS.Timeout;
 
-    if (!gameState.isGameOver && !gameState.isPaused) {
+    if (!TESTING_TIMER_OFF && !gameState.isGameOver && !gameState.isPaused) {
       timer = setInterval(() => {
         const now = Date.now();
         const currentSessionTime = now - lastResumeTimeRef.current;
@@ -414,6 +440,8 @@ const Game: React.FC<GameProps> = ({
 
     setOpenPauseDialog(false);
     setOpenEndDialog(false);
+    setEggsCollectedThisLevel(0);
+    setShowNextLevelPopup(false);
     setGameKey((prev) => prev + 1); // Increment key to force board remount and shuffle
   };
 
@@ -495,19 +523,25 @@ const Game: React.FC<GameProps> = ({
 
       <div className={styles.gameContainer}>
         <div className={styles.topBarContainer}>
-          <AppImage src={gameConfig.assets.ui.topBar} alt="Top bar" />
+          <AppImage src={gameConfig.assets.ui.topBar} alt="Top bar" className={styles.topBarImage} />
 
-          <div className={styles.topBarBestScoreContainer}>
-            <Typography className={styles.scoreText}>
-              {formatNumberWithCommas(bestScore)}
-            </Typography>
-          </div>
+          {SHOW_DYNAMIC_SCOREBOARD_TEXT && (
+            <>
+              <div className={styles.scoreboardLeft}>
+                <Typography className={styles.scoreboardBestLine}>
+                  Best: <span className={styles.scoreboardValue}>{formatNumberWithCommas(bestScore)}</span>
+                </Typography>
+                <Typography className={styles.scoreboardScoreLine}>
+                  Score: <span className={styles.scoreboardValue}>{formatNumberWithCommas(gameState.score)}</span>
+                </Typography>
+              </div>
 
-          <div className={styles.topBarScoreContainer}>
-            <Typography className={styles.scoreText}>
-              {formatNumberWithCommas(gameState.score)}
-            </Typography>
-          </div>
+              <AppImage src={eggIconSrc} alt="Egg icon" className={styles.scoreboardEggIcon} />
+              <Typography className={styles.scoreboardEggsText}>
+                Eggs: {formatNumberWithCommas(eggsCollectedThisLevel)}/{formatNumberWithCommas(levelConfig.eggTarget)}
+              </Typography>
+            </>
+          )}
 
           <button
             type="button"
@@ -550,11 +584,14 @@ const Game: React.FC<GameProps> = ({
               width={boardWidth}
               height={boardHeight}
               currentLevel={currentLevel}
+              maxHolesForLevel={levelConfig.maxHoles}
+              onHoleCountChange={setHoleCount}
+              onEggMatch={showNextLevelPopup ? undefined : handleEggMatch}
               audioOn={audioOn}
               onMatch={gameState.isGameOver ? () => {} : handleMatchScore}
               onResetCombo={gameState.isGameOver ? () => {} : resetCombo}
               items={items}
-              disabled={gameState.isGameOver}
+              disabled={gameState.isGameOver || showNextLevelPopup}
               key={gameKey}
               onSpecialItemMatch={gameState.isGameOver ? () => {} : handleSpecialItemMatch}
             />
@@ -668,6 +705,30 @@ const Game: React.FC<GameProps> = ({
         continuousCheckinCount={continuousCheckinCount}
         onNextEndDialog={onNextEndDialog}
       />
+
+      {/* Next level popup when egg goal reached */}
+      {showNextLevelPopup && (
+        <div className={styles.nextLevelOverlay}>
+          <div className={styles.nextLevelPopup}>
+            <Typography className={styles.nextLevelTitle}>
+              Level complete!
+            </Typography>
+            <Typography className={styles.nextLevelMessage}>
+              You collected {formatNumberWithCommas(eggsCollectedThisLevel)} eggs!
+            </Typography>
+            <button
+              type="button"
+              className={styles.nextLevelButton}
+              onClick={() => {
+                setShowNextLevelPopup(false);
+                onLevelComplete?.();
+              }}
+            >
+              Next level
+            </button>
+          </div>
+        </div>
+      )}
 
       <GameEndDialog
         open={openEndDialog}
