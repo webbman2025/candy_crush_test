@@ -834,12 +834,6 @@ const Board: React.FC<BoardProps> = ({
     const cell2Ref = cellRefs.current[getCellRefKey(row2, col2)];
 
     if (cell1Ref && cell2Ref) {
-      console.log(
-        "Animation starting for cells:",
-        { row: row1, col: col1 },
-        { row: row2, col: col2 }
-      );
-
       // Calculate the positions for the animation
       const cell1Rect = cell1Ref.getBoundingClientRect();
       const cell2Rect = cell2Ref.getBoundingClientRect();
@@ -930,8 +924,6 @@ const Board: React.FC<BoardProps> = ({
           if (this.progress() >= 0.6 && !hasTriggeredEarlyCompletion) {
             hasTriggeredEarlyCompletion = true;
 
-            console.log("Animation 60% completed");
-
             // Check if the swap resulted in a match using pre-calculated results
             if (potentialMatches.length > 0) {
               // Only update the board state if the swap is valid
@@ -960,8 +952,6 @@ const Board: React.FC<BoardProps> = ({
           }
         },
         onComplete: () => {
-          console.log("Animation fully completed");
-
           // Check if the swap resulted in a match using pre-calculated results
           if (potentialMatches.length === 0) {
             // Invalid swap - play invalid sound and revert animation

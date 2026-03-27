@@ -20,8 +20,10 @@
 }
 
 .matched {
-  // Remove the pulse animation and opacity change
-  // Items will now use the highlight border and star instead
+  .itemImage {
+    animation: matchPop 0.32s cubic-bezier(0.2, 0.8, 0.2, 1.18);
+    filter: drop-shadow(0 0 8px rgba(255, 245, 170, 0.9));
+  }
 }
 
 .selected {
@@ -121,5 +123,17 @@
   }
   100% {
     transform: rotate(8deg) scale(1.03);
+  }
+}
+
+@keyframes matchPop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.24);
+  }
+  100% {
+    transform: scale(0.92);
   }
 }
